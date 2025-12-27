@@ -6,8 +6,6 @@ on:
       - 'v*'
 
 env:
-  # The target triple for the host platform
-  HOST_TARGET: ${{ matrix.target }}
   # The binary name
   BINARY_NAME: ff
 
