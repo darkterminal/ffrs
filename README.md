@@ -23,7 +23,7 @@ cargo install ff
 ### From Source
 
 ```bash
-git clone https://github.com/your-username/ff-rs.git
+git clone https://github.com/darkterminal/ff-rs.git
 cd ff-rs
 cargo install --path .
 ```
