@@ -36,24 +36,18 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Intent, ParseError> {
-        // Expect a command word like "convert", "transcode", etc.
         let operation = self.parse_operation()?;
 
-        // Parse input path
         let input_path = self.parse_path()?;
 
-        // Validate input file format
         if !file_utils::is_supported_format(&input_path) {
             return Err(ParseError::UnsupportedFormat(input_path.clone()));
         }
 
-        // Expect "to" keyword
         self.expect_word("to")?;
 
-        // Parse output path or format
         let output_path = self.parse_output_path_or_format(&input_path)?;
 
-        // Validate output file format (only if it's a file path with extension)
         if output_path.contains('.') && !file_utils::is_supported_format(&output_path) {
             return Err(ParseError::UnsupportedFormat(output_path.clone()));
         }
@@ -98,7 +92,6 @@ impl Parser {
                 Ok(path.clone())
             },
             Token::Word(word) => {
-                // Check if it looks like a path (contains extension)
                 if word.contains('.') {
                     self.position += 1;
                     Ok(word.clone())
@@ -139,16 +132,13 @@ impl Parser {
                 Ok(path.clone())
             },
             Token::Format(format) => {
-                // Replace the extension in the input path with the new format
                 self.position += 1;
                 
-                // Get the directory and base name from the input path
                 let input_path_buf = PathBuf::from(input_path);
                 let dir = input_path_buf.parent().unwrap_or_else(|| std::path::Path::new(""));
                 let base_name = input_path_buf.file_stem()
                     .ok_or_else(|| ParseError::InvalidPath(input_path.to_string()))?;
                 
-                // Create new path with the new extension
                 let dir_str = dir.to_string_lossy();
                 let base_name_str = base_name.to_string_lossy();
                 let format_str = format.trim_start_matches('.');
@@ -162,7 +152,6 @@ impl Parser {
                 Ok(new_path)
             },
             Token::Word(word) => {
-                // Check if it looks like a path (contains extension)
                 if word.contains('.') {
                     self.position += 1;
                     Ok(word.clone())

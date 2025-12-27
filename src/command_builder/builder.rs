@@ -22,25 +22,20 @@ impl CommandBuilder {
                 format!("ffmpeg -i \"{}\" \"{}\"", input_path, output_path)
             },
             OperationType::Resize => {
-                // For resize, we might need additional parameters
                 let width = intent.parameters.get("width").unwrap_or(&"1920".to_string()).clone();
                 let height = intent.parameters.get("height").unwrap_or(&"1080".to_string()).clone();
                 format!("ffmpeg -i \"{}\" -vf scale={}:{} \"{}\"", input_path, width, height, output_path)
             },
             OperationType::Transcode => {
-                // For transcode, we might need codec parameters
                 let video_codec = intent.parameters.get("vcodec").unwrap_or(&"libx264".to_string()).clone();
                 let audio_codec = intent.parameters.get("acodec").unwrap_or(&"aac".to_string()).clone();
                 format!("ffmpeg -i \"{}\" -c:v {} -c:a {} \"{}\"", input_path, video_codec, audio_codec, output_path)
             },
             OperationType::ExtractAudio => {
-                // Extract audio from video file
                 format!("ffmpeg -i \"{}\" -q:a 0 -map a \"{}\"", input_path, output_path)
             },
         };
 
-        // Check for unsupported operations (though all are currently supported)
-        // This is a placeholder for future extensibility
         Ok(cmd)
     }
 }

@@ -1,6 +1,5 @@
 use std::path::Path;
 
-/// Checks if the file format is supported
 pub fn is_supported_format<P: AsRef<Path>>(file_path: P) -> bool {
     let file_path = file_path.as_ref();
     if let Some(ext) = file_path.extension() {

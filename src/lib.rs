@@ -4,7 +4,6 @@ pub mod command_builder;
 pub mod executor;
 pub mod utils;
 
-// Re-export the public API
 pub use grammar::{Tokenizer, Parser};
 pub use intent::types::{Intent, OperationType};
 pub use command_builder::CommandBuilder;

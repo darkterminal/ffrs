@@ -26,10 +26,8 @@ impl Runner {
     }
 
     pub fn execute(&self, cmd: &str) -> Result<(), ExecutionError> {
-        // Check if ffmpeg is available
         self.check_ffmpeg_availability()?;
 
-        // Parse the command string into program and arguments
         let parts: Vec<&str> = cmd.split_whitespace().collect();
 
         if parts.is_empty() {
@@ -39,21 +37,17 @@ impl Runner {
         let program = parts[0];
         let args: Vec<&str> = parts[1..].to_vec();
 
-        // Execute the command
         let output = Command::new(program)
             .args(&args)
             .output()
             .map_err(|e| ExecutionError::CommandFailed(format!("Failed to execute command: {}", e)))?;
 
-        // Check if the command was successful
         if output.status.success() {
-            // Print stdout if there's any
             if !output.stdout.is_empty() {
                 println!("{}", String::from_utf8_lossy(&output.stdout));
             }
             Ok(())
         } else {
-            // Print stderr if there's any
             if !output.stderr.is_empty() {
                 eprintln!("{}", String::from_utf8_lossy(&output.stderr));
             }
