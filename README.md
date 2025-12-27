@@ -1,73 +1,90 @@
 # FF - Media Conversion CLI Tool
 
-A Rust CLI application that translates plain English commands into equivalent ffmpeg commands.
-
-## Installation
-
-1. Download the appropriate binary for your platform from the releases page
-2. Make it executable: `chmod +x ff`
-3. Place it in your PATH or run directly
-
-## Usage
-
-### Interactive Mode
-
-Run `ff` to enter interactive mode:
-
-```bash
-ff
-> convert video.mp4 to video.webm
-```
-
-### Direct Mode
-
-Run the tool directly with your command:
-
-```bash
-ff "convert video.mp4 to video.webm"
-```
-
-### Dry Run
-
-Test your command without executing it:
-
-```bash
-ff --dry-run "convert video.mp4 to video.webm"
-```
-
-### Specify Output Directory
-
-```bash
-ff --output /path/to/output "convert video.mp4 to video.webm"
-```
-
-## Examples
-
-- Convert video format: `ff "convert myvideo.mp4 to myvideo.avi"`
-- Change quality: `ff "convert myvideo.mp4 to high quality"`
-- Extract audio: `ff "extract audio from myvideo.mp4 to myvideo.mp3"`
+FF is a CLI tool that translates plain English commands into ffmpeg commands. It provides both a library API and a command-line interface for media conversion tasks.
 
 ## Features
 
-- **Plain English Interface**: Use natural language to describe media conversions
-- **Interactive Mode**: Enter commands in a REPL-like environment
-- **Direct Mode**: Execute commands directly from the command line
-- **Dry Run**: Preview the generated ffmpeg command without executing it
-- **Predictable Output Naming**: Output files are named predictably based on input files
-- **Cross-Platform**: Works on Linux, macOS, and Windows
-- **Offline Operation**: No internet connection required
+- Translate plain English commands to ffmpeg commands
+- Support for multiple media formats
+- Interactive and direct command modes
+- Dry-run functionality
+- Deterministic and inspectable command generation
+
+## Installation
+
+### As a Binary
+
+You can install FF using Cargo:
+
+```bash
+cargo install ff
+```
+
+### From Source
+
+```bash
+git clone https://github.com/your-username/ff-rs.git
+cd ff-rs
+cargo install --path .
+```
+
+## Usage
+
+### Command Line Interface
+
+```bash
+# Convert a video file
+ff "convert video.mp4 to video.avi"
+
+# Interactive mode
+ff --interactive
+
+# Dry run (shows command without executing)
+ff --dry-run "convert video.mp4 to video.avi"
+
+# Specify output directory
+ff --output /path/to/output "convert video.mp4 to video.avi"
+```
+
+### As a Library
+
+Add to your `Cargo.toml`:
+
+```toml
+[dependencies]
+ff = "0.1.0"
+```
+
+Use in your code:
+
+```rust
+use ff::{Tokenizer, Parser, CommandBuilder};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Tokenize the command
+    let mut tokenizer = Tokenizer::new("convert video.mp4 to video.avi");
+    let tokens = tokenizer.tokenize();
+
+    // Parse the tokens into an intent
+    let mut parser = Parser::new(tokens);
+    let intent = parser.parse()?;
+
+    // Build the ffmpeg command
+    let cmd_builder = CommandBuilder::new();
+    let ffmpeg_cmd = cmd_builder.build_command(&intent)?;
+
+    println!("Generated command: {}", ffmpeg_cmd);
+
+    Ok(())
+}
+```
 
 ## Supported Formats
 
-Input and output formats include: MP4, AVI, MOV, WMV, MKV, WebM, MP3, WAV, FLAC, JPG, PNG, GIF
+- Video: MP4, AVI, MOV, WMV, MKV, WebM
+- Audio: MP3, WAV, FLAC
+- Images: JPG, PNG, GIF
 
-## Error Handling
+## License
 
-The tool provides detailed error messages with specific guidance on how to fix issues.
-
-## Exit Codes
-
-- `0`: Success - command executed successfully
-- `1`: User input error - invalid command or grammar
-- `2`: FFmpeg execution failure - ffmpeg returned an error
-- `>2`: Internal error - unexpected application error
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

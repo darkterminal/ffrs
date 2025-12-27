@@ -1,18 +1,39 @@
 use crate::intent::types::{Intent, OperationType};
 use std::path::PathBuf;
 
+/// Command builder for converting intents into ffmpeg commands.
 #[derive(Debug)]
 pub struct CommandBuilder;
 
 impl CommandBuilder {
+    /// Creates a new command builder.
     pub fn new() -> Self {
         Self
     }
 
+    /// Builds an ffmpeg command from the given intent.
+    ///
+    /// # Arguments
+    ///
+    /// * `intent` - The intent to convert to a command
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing either the ffmpeg command string or an error.
     pub fn build_command(&self, intent: &Intent) -> Result<String, Box<dyn std::error::Error>> {
         self.build_command_with_output_path(intent, intent.output_path.clone())
     }
 
+    /// Builds an ffmpeg command with a specific output path.
+    ///
+    /// # Arguments
+    ///
+    /// * `intent` - The intent to convert to a command
+    /// * `output_path` - The specific output path to use
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing either the ffmpeg command string or an error.
     pub fn build_command_with_output_path(&self, intent: &Intent, output_path: PathBuf) -> Result<String, Box<dyn std::error::Error>> {
         let input_path = intent.input_path.to_string_lossy();
         let output_path = output_path.to_string_lossy();

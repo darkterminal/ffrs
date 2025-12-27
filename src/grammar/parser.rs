@@ -3,17 +3,23 @@ use std::path::PathBuf;
 use crate::grammar::tokenizer::Token;
 use crate::utils::file_utils;
 
+/// Parser for converting tokens into structured intents.
 #[derive(Debug)]
 pub struct Parser {
     tokens: Vec<Token>,
     position: usize,
 }
 
+/// Error types that can occur during parsing.
 #[derive(Debug)]
 pub enum ParseError {
+    /// An unexpected token was encountered
     UnexpectedToken(String),
+    /// An expected token was missing
     MissingToken(String),
+    /// An invalid path was provided
     InvalidPath(String),
+    /// An unsupported format was specified
     UnsupportedFormat(String),
 }
 
@@ -31,10 +37,20 @@ impl std::fmt::Display for ParseError {
 impl std::error::Error for ParseError {}
 
 impl Parser {
+    /// Creates a new parser with the given tokens.
+    ///
+    /// # Arguments
+    ///
+    /// * `tokens` - A vector of tokens to parse
     pub fn new(tokens: Vec<Token>) -> Self {
         Self { tokens, position: 0 }
     }
 
+    /// Parses the tokens into an Intent struct.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing either the parsed `Intent` or a `ParseError`.
     pub fn parse(&mut self) -> Result<Intent, ParseError> {
         let operation = self.parse_operation()?;
 

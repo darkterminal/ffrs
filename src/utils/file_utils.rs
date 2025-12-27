@@ -1,5 +1,22 @@
 use std::path::Path;
 
+/// Checks if the given file path has a supported media format.
+///
+/// # Arguments
+///
+/// * `file_path` - The file path to check
+///
+/// # Returns
+///
+/// `true` if the file format is supported, `false` otherwise.
+///
+/// # Examples
+///
+/// ```
+/// use ff::utils::file_utils::is_supported_format;
+/// assert!(is_supported_format("video.mp4"));
+/// assert!(!is_supported_format("document.txt"));
+/// ```
 pub fn is_supported_format<P: AsRef<Path>>(file_path: P) -> bool {
     let file_path = file_path.as_ref();
     if let Some(ext) = file_path.extension() {

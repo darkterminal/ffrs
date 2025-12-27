@@ -1,19 +1,39 @@
 
+/// Token types for the FF CLI tool.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
+    /// A regular word token
     Word(String),
+    /// A file path token
     Path(String),
+    /// A format token (e.g., .mp4, .avi)
     Format(String),
+    /// A numeric value
     Number(f64),
+    /// An unknown token type
     Unknown(String),
 }
 
+/// Tokenizer for converting plain English commands into tokens.
 pub struct Tokenizer {
     text: String,
     position: usize,
 }
 
 impl Tokenizer {
+    /// Creates a new tokenizer for the given text.
+    ///
+    /// # Arguments
+    ///
+    /// * `text` - The input text to tokenize
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ff::Tokenizer;
+    /// let mut tokenizer = Tokenizer::new("convert video.mp4 to video.avi");
+    /// let tokens = tokenizer.tokenize();
+    /// ```
     pub fn new(text: &str) -> Self {
         Self {
             text: text.to_string(),
@@ -21,9 +41,14 @@ impl Tokenizer {
         }
     }
 
+    /// Tokenizes the input text into a vector of tokens.
+    ///
+    /// # Returns
+    ///
+    /// A vector of `Token` enums representing the parsed tokens.
     pub fn tokenize(&mut self) -> Vec<Token> {
         let mut tokens = Vec::new();
-        
+
         while self.position < self.text.len() {
             if let Some(token) = self.next_token() {
                 tokens.push(token);
@@ -31,7 +56,7 @@ impl Tokenizer {
                 self.position += 1;
             }
         }
-        
+
         tokens
     }
 

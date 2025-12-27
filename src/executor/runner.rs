@@ -1,11 +1,15 @@
 use std::process::Command;
 
+/// Runner for executing ffmpeg commands.
 #[derive(Debug)]
 pub struct Runner;
 
+/// Error types that can occur during command execution.
 #[derive(Debug)]
 pub enum ExecutionError {
+    /// The command failed to execute
     CommandFailed(String),
+    /// The command is invalid
     InvalidCommand(String),
 }
 
@@ -21,10 +25,20 @@ impl std::fmt::Display for ExecutionError {
 impl std::error::Error for ExecutionError {}
 
 impl Runner {
+    /// Creates a new command runner.
     pub fn new() -> Self {
         Self
     }
 
+    /// Executes the given ffmpeg command.
+    ///
+    /// # Arguments
+    ///
+    /// * `cmd` - The ffmpeg command to execute
+    ///
+    /// # Returns
+    ///
+    /// A `Result` indicating success or an `ExecutionError`.
     pub fn execute(&self, cmd: &str) -> Result<(), ExecutionError> {
         self.check_ffmpeg_availability()?;
 
@@ -58,6 +72,11 @@ impl Runner {
         }
     }
 
+    /// Checks if ffmpeg is available in the system PATH.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` indicating success or an `ExecutionError` if ffmpeg is not available.
     fn check_ffmpeg_availability(&self) -> Result<(), ExecutionError> {
         match Command::new("ffmpeg")
             .arg("-version")
