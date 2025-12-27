@@ -1,6 +1,6 @@
-# FF - Media Conversion CLI Tool
+# ffrs - Media Conversion CLI Tool
 
-FF is a CLI tool that translates plain English commands into ffmpeg commands. It provides both a library API and a command-line interface for media conversion tasks.
+ffrs is a CLI tool that translates plain English commands into ffmpeg commands. It provides both a library API and a command-line interface for media conversion tasks.
 
 ## The Story
 
@@ -15,7 +15,7 @@ Scroll.
 Scroll again.
 Refresh.
 
-Suddenly, nixCraft posts about the **ff CLI tool**.
+Suddenly, nixCraft posts about the **ffrs CLI tool**.
 Yeah, it’s written in JavaScript—and the comment section is exactly what you’d expect.
 
 Then someone drops the line that changes everything:
@@ -42,17 +42,17 @@ Just momentum.
 
 ### As a Binary
 
-You can install FF using Cargo:
+You can install ffrs using Cargo:
 
 ```bash
-cargo install ff
+cargo install ffrs
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/darkterminal/ff-rs.git
-cd ff-rs
+git clone https://github.com/darkterminal/ffrs.git
+cd ffrs
 cargo install --path .
 ```
 
@@ -62,16 +62,16 @@ cargo install --path .
 
 ```bash
 # Convert a video file
-ff "convert video.mp4 to video.avi"
+ffrs "convert video.mp4 to video.avi"
 
 # Interactive mode
-ff --interactive
+ffrs --interactive
 
 # Dry run (shows command without executing)
-ff --dry-run "convert video.mp4 to video.avi"
+ffrs --dry-run "convert video.mp4 to video.avi"
 
 # Specify output directory
-ff --output /path/to/output "convert video.mp4 to video.avi"
+ffrs --output /path/to/output "convert video.mp4 to video.avi"
 ```
 
 ### As a Library
@@ -80,13 +80,13 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ff = "0.1.0"
+ffrs = "0.1.0"
 ```
 
 Use in your code:
 
 ```rust
-use ff::{Tokenizer, Parser, CommandBuilder};
+use ffrs::{Tokenizer, Parser, CommandBuilder};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Tokenize the command

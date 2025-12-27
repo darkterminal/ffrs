@@ -1,4 +1,4 @@
-use ff::{Tokenizer, Parser, CommandBuilder};
+use ffrs::{Tokenizer, Parser, CommandBuilder};
 
 #[test]
 fn test_quickstart_scenarios() {

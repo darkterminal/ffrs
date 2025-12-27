@@ -13,7 +13,7 @@ use std::path::Path;
 /// # Examples
 ///
 /// ```
-/// use ff::utils::file_utils::is_supported_format;
+/// use ffrs::utils::file_utils::is_supported_format;
 /// assert!(is_supported_format("video.mp4"));
 /// assert!(!is_supported_format("document.txt"));
 /// ```

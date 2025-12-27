@@ -11,35 +11,35 @@
 
 ## Introduction
 
-FF is a simple tool that helps you convert media files (like videos and audio) using plain English commands. Instead of remembering complex technical commands, you can just type what you want to do in simple English, and FF will handle the technical details for you.
+`ffrs` is a simple tool that helps you convert media files (like videos and audio) using plain English commands. Instead of remembering complex technical commands, you can just type what you want to do in simple English, and FF will handle the technical details for you.
 
 For example, instead of typing a complex command, you can just say "convert video.mp4 to video.avi" and FF will do the conversion for you.
 
-FF works on Windows, Mac, and Linux computers. It's designed to be simple to use but powerful enough to handle most media conversion tasks.
+`ffrs` works on Windows, Mac, and Linux computers. It's designed to be simple to use but powerful enough to handle most media conversion tasks.
 
 ## Installation
 
 ### Windows
 
-1. Download the latest FF release from the [releases page](https://github.com/darkterminal/ff-rs/releases) (look for the file ending in `-pc-windows-msvc.zip`)
+1. Download the latest `ffrs` release from the [releases page](https://github.com/darkterminal/ffrs/releases) (look for the file ending in `-pc-windows-msvc.zip`)
 2. Extract the downloaded file
-3. Copy the `ff.exe` file to a folder on your computer (like `C:\Program Files\ff\`)
+3. Copy the `ffrs.exe` file to a folder on your computer (like `C:\Program Files\ffrs\`)
 4. Add that folder to your system PATH (search online for "how to add to PATH Windows" if you need help)
-5. Open Command Prompt and type `ff --version` to verify the installation
+5. Open Command Prompt and type `ffrs --version` to verify the installation
 
 ### Mac
 
-1. Download the latest FF release from the [releases page](https://github.com/darkterminal/ff-rs/releases) (look for the file ending in `-apple-darwin.tar.gz`)
+1. Download the latest ffrs release from the [releases page](https://github.com/darkterminal/ffrs/releases) (look for the file ending in `-apple-darwin.tar.gz`)
 2. Extract the downloaded file
-3. Copy the `ff` file to `/usr/local/bin/` (you may need administrator privileges)
+3. Copy the `ffrs` file to `/usr/local/bin/` (you may need administrator privileges)
 4. Open Terminal and type `ff --version` to verify the installation
 
 ### Linux
 
-1. Download the latest FF release from the [releases page](https://github.com/darkterminal/ff-rs/releases) (look for the file ending in `-unknown-linux-musl.tar.gz`)
+1. Download the latest ffrs release from the [releases page](https://github.com/darkterminal/ffrs/releases) (look for the file ending in `-unknown-linux-musl.tar.gz`)
 2. Extract the downloaded file
-3. Copy the `ff` file to `/usr/local/bin/` (you may need sudo privileges)
-4. Open Terminal and type `ff --version` to verify the installation
+3. Copy the `ffrs` file to `/usr/local/bin/` (you may need sudo privileges)
+4. Open Terminal and type `ffrs --version` to verify the installation
 
 ### Prerequisites
 
@@ -52,25 +52,25 @@ To install ffmpeg:
 
 ## Getting Started
 
-FF can be used in two ways:
+ffrs can be used in two ways:
 
 1. **Direct mode**: Type your command directly
-2. **Interactive mode**: Start FF and then type your commands
+2. **Interactive mode**: Start ffrs and then type your commands
 
 ### Direct Mode
 
-In direct mode, you specify your command right after typing `ff`:
+In direct mode, you specify your command right after typing `ffrs`:
 
 ```bash
-ff "convert myvideo.mp4 to myvideo.avi"
+ffrs "convert myvideo.mp4 to myvideo.avi"
 ```
 
 ### Interactive Mode
 
-In interactive mode, you start FF first, then type your commands:
+In interactive mode, you start ffrs first, then type your commands:
 
 ```bash
-ff --interactive
+ffrs --interactive
 ```
 
 Then you'll see a prompt where you can type commands:
@@ -83,9 +83,9 @@ To exit interactive mode, type `quit` or `exit`.
 
 ## Basic Usage
 
-### Understanding FF Commands
+### Understanding ffrs Commands
 
-FF commands follow a simple pattern:
+ffrs commands follow a simple pattern:
 
 ```
 [operation] [input file] to [output file]
@@ -96,19 +96,19 @@ Examples:
 - `convert myvideo.mp4 to .avi` (converts to the same name but different format)
 - `extract audio from myvideo.mp4 to myaudio.mp3`
 
-### What FF Does
+### What ffrs Does
 
-When you run a command, FF does the following:
+When you run a command, ffrs does the following:
 1. Shows you the technical command it will run
 2. Asks for confirmation (unless you use `--yes`)
 3. Runs the command using ffmpeg
 
 For example, if you type:
 ```
-ff "convert video.mp4 to video.avi"
+ffrs "convert video.mp4 to video.avi"
 ```
 
-FF will show:
+ffrs will show:
 ```
 ffmpeg -i "video.mp4" "video.avi"
 ```
@@ -117,13 +117,13 @@ Then it will run this command to perform the conversion.
 
 ### Dry Run
 
-To see what FF would do without actually doing it, use the `--dry-run` option:
+To see what ffrs would do without actually doing it, use the `--dry-run` option:
 
 ```bash
-ff --dry-run "convert video.mp4 to video.avi"
+ffrs --dry-run "convert video.mp4 to video.avi"
 ```
 
-This will show you the command FF would run but won't actually execute it.
+This will show you the command ffrs would run but won't actually execute it.
 
 ## Common Tasks
 
@@ -131,38 +131,38 @@ This will show you the command FF would run but won't actually execute it.
 
 **Convert MP4 to AVI:**
 ```
-ff "convert myvideo.mp4 to myvideo.avi"
+ffrs "convert myvideo.mp4 to myvideo.avi"
 ```
 
 **Convert to different format with same name:**
 ```
-ff "convert myvideo.mp4 to .avi"
+ffrs "convert myvideo.mp4 to .avi"
 ```
 
 ### Converting Audio Formats
 
 **Extract audio from video:**
 ```
-ff "extract audio from myvideo.mp4 to myaudio.mp3"
+ffrs "extract audio from myvideo.mp4 to myaudio.mp3"
 ```
 
 **Convert audio file format:**
 ```
-ff "convert mysong.wav to mysong.mp3"
+ffrs "convert mysong.wav to mysong.mp3"
 ```
 
 ### Converting Images
 
 **Convert image formats:**
 ```
-ff "convert photo.jpg to photo.png"
+ffrs "convert photo.jpg to photo.png"
 ```
 
 ### Specifying Output Directory
 
 To save the output file in a different directory:
 ```bash
-ff --output /path/to/output "convert video.mp4 to video.avi"
+ffrs --output /path/to/output "convert video.mp4 to video.avi"
 ```
 
 ## Troubleshooting
@@ -181,18 +181,18 @@ ff --output /path/to/output "convert video.mp4 to video.avi"
 
 **Error: "Unsupported format"**
 - Make sure the input file is in a supported format
-- FF supports: MP4, AVI, MOV, WMV, MKV, WebM, MP3, WAV, FLAC, JPG, PNG, GIF
+- ffrs supports: MP4, AVI, MOV, WMV, MKV, WebM, MP3, WAV, FLAC, JPG, PNG, GIF
 
-**FF command not found**
-- Make sure FF is properly installed and in your PATH
+**ffrs command not found**
+- Make sure ffrs is properly installed and in your PATH
 - On Windows, you might need to restart your command prompt after installation
 - On Mac/Linux, you might need to log out and back in
 
 ### Getting Help
 
 If you need help with FF, you can:
-- Use `ff --help` to see available options
-- Check the output FF shows you before running commands
+- Use `ffrs --help` to see available options
+- Check the output ffrs shows you before running commands
 - Look at the examples in this manual
 
 ## Reference
@@ -211,7 +211,7 @@ If you need help with FF, you can:
 
 ### Command Options
 
-- `--interactive`: Start FF in interactive mode
+- `--interactive`: Start ffrs in interactive mode
 - `--dry-run`: Show the command without executing it
 - `--output [path]`: Specify output directory
 - `--help`: Show help information
@@ -219,7 +219,7 @@ If you need help with FF, you can:
 
 ### File Naming
 
-FF follows predictable naming rules:
+ffrs follows predictable naming rules:
 - Input: `video.mp4` → Output: `video.avi` (when converting to different format)
 - Input: `path/to/video.mp4` → Output: `path/to/video.avi` (output in same directory)
 - Input: `video.mp4` → Output: `video.avi` (when using format like `.avi`)

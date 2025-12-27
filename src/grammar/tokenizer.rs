@@ -30,7 +30,7 @@ impl Tokenizer {
     /// # Examples
     ///
     /// ```
-    /// use ff::Tokenizer;
+    /// use ffrs::Tokenizer;
     /// let mut tokenizer = Tokenizer::new("convert video.mp4 to video.avi");
     /// let tokens = tokenizer.tokenize();
     /// ```

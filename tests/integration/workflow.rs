@@ -1,4 +1,4 @@
-use ff::{Tokenizer, Parser, CommandBuilder, Runner};
+use ffrs::{Tokenizer, Parser, CommandBuilder, Runner};
 
 #[test]
 fn test_complete_workflow() {
