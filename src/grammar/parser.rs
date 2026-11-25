@@ -59,6 +59,11 @@ impl Parser {
     pub fn parse(&mut self) -> Result<Intent, ParseError> {
         let operation = self.parse_operation()?;
 
+        if operation == OperationType::ExtractAudio {
+            self.consume_optional_word("audio");
+            self.consume_optional_word("from");
+        }
+
         let input_path = self.parse_path()?;
 
         if !file_utils::is_supported_format(&input_path) {
@@ -131,6 +136,14 @@ impl Parser {
                 }
             },
             _ => Err(ParseError::UnexpectedToken("Expected path".to_string())),
+        }
+    }
+
+    fn consume_optional_word(&mut self, word: &str) {
+        if let Some(Token::Word(candidate)) = self.tokens.get(self.position) {
+            if candidate.eq_ignore_ascii_case(word) {
+                self.position += 1;
+            }
         }
     }
 
@@ -284,10 +297,64 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let intent = parser.parse().unwrap();
 
-        assert_eq!(
-            intent.input_path,
-            PathBuf::from("C:\\Users\\me\\clip.mp4")
-        );
+        assert_eq!(intent.input_path, PathBuf::from("C:\\Users\\me\\clip.mp4"));
         assert_eq!(intent.output_path, PathBuf::from("D:\\out\\clip.avi"));
+    }
+
+    fn parse(command: &str) -> Result<Intent, ParseError> {
+        let mut tokenizer = Tokenizer::new(command);
+        let tokens = tokenizer.tokenize();
+        Parser::new(tokens).parse()
+    }
+
+    #[test]
+    fn test_parse_extract_audio_with_from() {
+        let intent = parse("extract audio from video.mp4 to audio.mp3").unwrap();
+
+        assert_eq!(intent.operation, OperationType::ExtractAudio);
+        assert_eq!(intent.input_path, PathBuf::from("video.mp4"));
+        assert_eq!(intent.output_path, PathBuf::from("audio.mp3"));
+    }
+
+    #[test]
+    fn test_parse_extract_audio_without_from() {
+        let intent = parse("extract audio video.mp4 to audio.mp3").unwrap();
+
+        assert_eq!(intent.operation, OperationType::ExtractAudio);
+        assert_eq!(intent.input_path, PathBuf::from("video.mp4"));
+    }
+
+    #[test]
+    fn test_parse_extract_audio_short_form() {
+        let intent = parse("extract video.mp4 to audio.mp3").unwrap();
+
+        assert_eq!(intent.operation, OperationType::ExtractAudio);
+        assert_eq!(intent.input_path, PathBuf::from("video.mp4"));
+    }
+
+    #[test]
+    fn test_parse_extract_audio_single_word_operation() {
+        let intent = parse("extractaudio video.mp4 to audio.mp3").unwrap();
+
+        assert_eq!(intent.operation, OperationType::ExtractAudio);
+        assert_eq!(intent.input_path, PathBuf::from("video.mp4"));
+    }
+
+    #[test]
+    fn test_convert_with_audio_named_input_is_unaffected() {
+        let intent = parse("convert audio.mp4 to audio.mp3").unwrap();
+
+        assert_eq!(intent.operation, OperationType::Convert);
+        assert_eq!(intent.input_path, PathBuf::from("audio.mp4"));
+    }
+
+    #[test]
+    fn test_extract_audio_requires_input_path() {
+        let error = parse("extract audio from to audio.mp3").unwrap_err();
+
+        assert!(matches!(
+            error,
+            ParseError::UnexpectedToken(_) | ParseError::MissingToken(_)
+        ));
     }
 }
