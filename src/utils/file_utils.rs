@@ -21,9 +21,20 @@ pub fn is_supported_format<P: AsRef<Path>>(file_path: P) -> bool {
     let file_path = file_path.as_ref();
     if let Some(ext) = file_path.extension() {
         let ext_lower = ext.to_string_lossy().to_lowercase();
-        matches!(ext_lower.as_str(),
-            "mp4" | "avi" | "mov" | "wmv" | "mkv" | "webm" |
-            "mp3" | "wav" | "flac" | "jpg" | "png" | "gif"
+        matches!(
+            ext_lower.as_str(),
+            "mp4"
+                | "avi"
+                | "mov"
+                | "wmv"
+                | "mkv"
+                | "webm"
+                | "mp3"
+                | "wav"
+                | "flac"
+                | "jpg"
+                | "png"
+                | "gif"
         )
     } else {
         false
