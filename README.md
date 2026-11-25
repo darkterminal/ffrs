@@ -113,6 +113,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - Audio: MP3, WAV, FLAC
 - Images: JPG, PNG, GIF
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for notable changes.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
