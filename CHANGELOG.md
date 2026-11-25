@@ -25,5 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Require `--output` to be an existing directory and report a clear error when it is missing.
 - Interactive mode now exits on EOF instead of looping forever printing prompts.
 - Interactive mode reports I/O errors instead of panicking when stdout cannot be written.
+- Tokenizer recognizes relative, quoted, and Windows paths instead of rejecting them.
+- Tokenizer always advances past unexpected characters instead of looping forever.
 
 ### Removed
