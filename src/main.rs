@@ -12,6 +12,7 @@ use command_builder::CommandBuilder;
 use errors::FfError;
 use executor::runner::Runner;
 use grammar::{Parser as GrammarParser, Tokenizer};
+use utils::file_utils;
 
 #[derive(ClapParser)]
 #[command(name = "ff")]
@@ -92,7 +93,17 @@ fn run_direct_mode(command: &str, dry_run: bool, output: Option<String>) {
 fn print_guidance(err: &FfError) {
     match err {
         FfError::UserInput(msg) => {
-            if msg.contains("not exist") || msg.contains("not found") {
+            if msg.contains("Output directory") {
+                eprintln!(
+                    "Guidance: Create the output directory first or choose an existing one."
+                );
+            } else if msg.contains("must differ from input") {
+                eprintln!("Guidance: Choose a different output file name or format.");
+            } else if msg.contains("must use a supported format") {
+                eprintln!(
+                    "Guidance: Use a supported output extension: MP4, AVI, MOV, WMV, MKV, WebM, MP3, WAV, FLAC, JPG, PNG, GIF"
+                );
+            } else if msg.contains("not exist") || msg.contains("not found") {
                 eprintln!(
                     "Guidance: Make sure the input file path is correct and the file exists."
                 );
@@ -144,12 +155,28 @@ fn process_command(command: &str, dry_run: bool, output: Option<String>) -> Resu
     let cmd_builder = CommandBuilder::new();
 
     let ffmpeg_cmd = if let Some(output_dir) = output {
-        let output_path = std::path::PathBuf::from(&output_dir).join(
+        let output_dir = std::path::PathBuf::from(&output_dir);
+        if !output_dir.is_dir() {
+            return Err(FfError::UserInput(format!(
+                "Output directory does not exist or is not a directory: {}",
+                output_dir.display()
+            )));
+        }
+
+        let output_path = output_dir.join(
             intent
                 .output_path
                 .file_name()
                 .ok_or_else(|| FfError::UserInput("Invalid output path".to_string()))?,
         );
+
+        if file_utils::same_file(&intent.input_path, &output_path) {
+            return Err(FfError::UserInput(format!(
+                "Output path must differ from input path: {}",
+                output_path.display()
+            )));
+        }
+
         cmd_builder
             .build_command_with_output_path(&intent, output_path)
             .map_err(|e| FfError::UserInput(e.to_string()))?
