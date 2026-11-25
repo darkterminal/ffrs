@@ -1,6 +1,11 @@
 # ffrs - Media Conversion CLI Tool
 
-ffrs is a CLI tool that translates plain English commands into ffmpeg commands. It provides both a library API and a command-line interface for media conversion tasks.
+[![CI](https://github.com/darkterminal/ffrs/actions/workflows/ci.yml/badge.svg)](https://github.com/darkterminal/ffrs/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/ffrs.svg)](https://crates.io/crates/ffrs)
+[![docs.rs](https://docs.rs/ffrs/badge.svg)](https://docs.rs/ffrs)
+[![license](https://img.shields.io/crates/l/ffrs.svg)](LICENSE)
+
+`ffrs` translates plain English commands into `ffmpeg` commands. It works as both a command-line tool and a Rust library.
 
 ## The Story
 
@@ -33,22 +38,23 @@ Just momentum.
 ## Features
 
 - Translate plain English commands to ffmpeg commands
-- Support for multiple media formats
+- Convert video, audio, and image formats
+- Extract audio from a video file
 - Interactive and direct command modes
-- Dry-run functionality
-- Deterministic and inspectable command generation
+- Dry-run to inspect the generated command before running it
+- Deterministic, structured command generation
 
 ## Installation
 
-### As a Binary
+Actual conversion requires `ffmpeg` in your `PATH`. `--dry-run` only prints the command and does not need ffmpeg.
 
-You can install ffrs using Cargo:
+### From crates.io
 
 ```bash
 cargo install ffrs
 ```
 
-### From Source
+### From source
 
 ```bash
 git clone https://github.com/darkterminal/ffrs.git
@@ -56,25 +62,50 @@ cd ffrs
 cargo install --path .
 ```
 
+Verify the installation:
+
+```bash
+ffrs --version
+```
+
+Prebuilt release archives are not currently published. Use one of the Cargo methods above.
+
 ## Usage
 
-### Command Line Interface
+### Direct mode
 
 ```bash
 # Convert a video file
 ffrs "convert video.mp4 to video.avi"
 
-# Interactive mode
-ffrs --interactive
-
-# Dry run (shows command without executing)
+# Inspect the command without running it
 ffrs --dry-run "convert video.mp4 to video.avi"
 
-# Specify output directory
+# Extract audio
+ffrs "extract audio from video.mp4 to audio.mp3"
+
+# Paths with spaces
+ffrs 'convert "my video.mp4" to "my video.avi"'
+
+# Write the output into an existing directory
 ffrs --output /path/to/output "convert video.mp4 to video.avi"
+
+# Version and help
+ffrs --version
+ffrs --help
 ```
 
-### As a Library
+The command is printed before execution. Use `--dry-run` when you only want to inspect it.
+
+### Interactive mode
+
+```bash
+ffrs --interactive
+```
+
+Type commands at the `>` prompt. Type `quit` or `exit` to leave; end-of-input (for example Ctrl-D) also exits.
+
+### As a library
 
 Add to your `Cargo.toml`:
 
@@ -86,36 +117,69 @@ ffrs = "0.1.0"
 Use in your code:
 
 ```rust
-use ffrs::{Tokenizer, Parser, CommandBuilder};
+use ffrs::{CommandBuilder, Parser, Tokenizer};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Tokenize the command
     let mut tokenizer = Tokenizer::new("convert video.mp4 to video.avi");
     let tokens = tokenizer.tokenize();
 
-    // Parse the tokens into an intent
     let mut parser = Parser::new(tokens);
     let intent = parser.parse()?;
 
-    // Build the ffmpeg command
     let cmd_builder = CommandBuilder::new();
     let ffmpeg_cmd = cmd_builder.build_command(&intent)?;
 
-    println!("Generated command: {}", ffmpeg_cmd);
+    println!("Generated command: {}", ffmpeg_cmd.to_display_string());
 
     Ok(())
 }
 ```
 
-## Supported Formats
+## Command syntax
+
+```text
+[operation] <input> to <output>
+```
+
+Supported operations:
+
+- `convert` — convert a file to another supported format
+- `extract audio from <input> to <output>` — extract audio (shorter forms `extract audio <input> ...`, `extract <input> ...`, and `extractaudio <input> ...` also work)
+
+Rules:
+
+- The input file must exist and be a file.
+- The output must have a supported extension and must differ from the input.
+- `--output` must point to a directory that already exists; only the output file name is taken from the command.
+- Relative, absolute, quoted, and Windows-style paths are recognized.
+
+## Supported formats
 
 - Video: MP4, AVI, MOV, WMV, MKV, WebM
 - Audio: MP3, WAV, FLAC
 - Images: JPG, PNG, GIF
 
+## Exit codes
+
+- `0`: success
+- `1`: user input error (including CLI usage errors)
+- `2`: ffmpeg execution failure
+- `3`: internal error
+
+## Known limitations
+
+- Commands execute immediately after being printed; use `--dry-run` to inspect first.
+- Output directories are not created automatically.
+- Glob patterns and `~` are not expanded by `ffrs`; the shell may expand them first.
+- No release binaries are published at the moment.
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for notable changes.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and contribution guidelines.
 
 ## License
 

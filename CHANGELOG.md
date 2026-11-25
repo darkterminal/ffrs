@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The binary now consumes the library crate instead of compiling a second copy of its modules.
 - `Cargo.lock` is now tracked, and non-crate files are excluded from package archives.
 - Rustfmt configuration now matches the crate's 2021 edition, and all sources are formatted.
+- README, user manual, and Qwen context now describe the implemented CLI; removed `--yes` and release-asset instructions.
 
 ### Fixed
 

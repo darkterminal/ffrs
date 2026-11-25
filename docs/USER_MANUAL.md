@@ -1,6 +1,7 @@
-# User Manual for FF CLI Tool
+# User Manual for ffrs CLI Tool
 
 ## Table of Contents
+
 1. [Introduction](#introduction)
 2. [Installation](#installation)
 3. [Getting Started](#getting-started)
@@ -11,222 +12,236 @@
 
 ## Introduction
 
-`ffrs` is a simple tool that helps you convert media files (like videos and audio) using plain English commands. Instead of remembering complex technical commands, you can just type what you want to do in simple English, and FF will handle the technical details for you.
+`ffrs` is a tool that converts media files using plain English commands. Instead of remembering complex ffmpeg options, you type something like `convert video.mp4 to video.avi` and `ffrs` builds the ffmpeg command for you.
 
-For example, instead of typing a complex command, you can just say "convert video.mp4 to video.avi" and FF will do the conversion for you.
-
-`ffrs` works on Windows, Mac, and Linux computers. It's designed to be simple to use but powerful enough to handle most media conversion tasks.
+`ffrs` runs on Windows, macOS, and Linux.
 
 ## Installation
 
-### Windows
+Release archives are not currently published, so install with Cargo.
 
-1. Download the latest `ffrs` release from the [releases page](https://github.com/darkterminal/ffrs/releases) (look for the file ending in `-pc-windows-msvc.zip`)
-2. Extract the downloaded file
-3. Copy the `ffrs.exe` file to a folder on your computer (like `C:\Program Files\ffrs\`)
-4. Add that folder to your system PATH (search online for "how to add to PATH Windows" if you need help)
-5. Open Command Prompt and type `ffrs --version` to verify the installation
+### With Cargo (all platforms)
 
-### Mac
+```bash
+cargo install ffrs
+```
 
-1. Download the latest ffrs release from the [releases page](https://github.com/darkterminal/ffrs/releases) (look for the file ending in `-apple-darwin.tar.gz`)
-2. Extract the downloaded file
-3. Copy the `ffrs` file to `/usr/local/bin/` (you may need administrator privileges)
-4. Open Terminal and type `ff --version` to verify the installation
+### From source
 
-### Linux
+```bash
+git clone https://github.com/darkterminal/ffrs.git
+cd ffrs
+cargo install --path .
+```
 
-1. Download the latest ffrs release from the [releases page](https://github.com/darkterminal/ffrs/releases) (look for the file ending in `-unknown-linux-musl.tar.gz`)
-2. Extract the downloaded file
-3. Copy the `ffrs` file to `/usr/local/bin/` (you may need sudo privileges)
-4. Open Terminal and type `ffrs --version` to verify the installation
+Verify the installation:
+
+```bash
+ffrs --version
+```
+
+Make sure the Cargo bin directory is in your `PATH` (usually `~/.cargo/bin`, or `%USERPROFILE%\.cargo\bin` on Windows).
 
 ### Prerequisites
 
-FF requires `ffmpeg` to be installed on your system. FFmpeg is the actual tool that does the media conversion, while FF just translates your English commands into the commands that ffmpeg understands.
+`ffrs` generates commands but does not include ffmpeg. Install ffmpeg separately and make sure `ffmpeg -version` works in your terminal:
 
-To install ffmpeg:
-- **Windows**: Download from https://ffmpeg.org/download.html or use a package manager like Chocolatey
-- **Mac**: Install with Homebrew by running `brew install ffmpeg`
-- **Linux**: Install with your package manager (e.g., `sudo apt install ffmpeg` on Ubuntu)
+- **Windows**: download from https://ffmpeg.org/download.html or use a package manager such as Chocolatey.
+- **macOS**: `brew install ffmpeg`
+- **Linux**: use your package manager, for example `sudo apt install ffmpeg` on Ubuntu.
+
+`--dry-run` does not need ffmpeg because it only prints the command.
 
 ## Getting Started
 
-ffrs can be used in two ways:
+`ffrs` has two modes:
 
-1. **Direct mode**: Type your command directly
-2. **Interactive mode**: Start ffrs and then type your commands
+1. **Direct mode**: pass the command as an argument.
+2. **Interactive mode**: start `ffrs`, then type commands one at a time.
 
-### Direct Mode
-
-In direct mode, you specify your command right after typing `ffrs`:
+### Direct mode
 
 ```bash
 ffrs "convert myvideo.mp4 to myvideo.avi"
 ```
 
-### Interactive Mode
-
-In interactive mode, you start ffrs first, then type your commands:
+### Interactive mode
 
 ```bash
 ffrs --interactive
 ```
 
-Then you'll see a prompt where you can type commands:
+You will see a `>` prompt where you can type commands:
 
-```
+```text
 > convert myvideo.mp4 to myvideo.avi
 ```
 
-To exit interactive mode, type `quit` or `exit`.
+Type `quit` or `exit` to leave. Pressing Ctrl-D (or Ctrl-Z then Enter on Windows) also exits.
 
 ## Basic Usage
 
-### Understanding ffrs Commands
+### Command pattern
 
-ffrs commands follow a simple pattern:
-
-```
-[operation] [input file] to [output file]
+```text
+[operation] <input file> to <output file>
 ```
 
 Examples:
+
 - `convert video.mp4 to video.avi`
-- `convert myvideo.mp4 to .avi` (converts to the same name but different format)
+- `convert myvideo.mp4 to .avi` (same name, different format)
 - `extract audio from myvideo.mp4 to myaudio.mp3`
 
-### What ffrs Does
+### What ffrs does
 
-When you run a command, ffrs does the following:
-1. Shows you the technical command it will run
-2. Asks for confirmation (unless you use `--yes`)
-3. Runs the command using ffmpeg
+When you run a command, `ffrs`:
 
-For example, if you type:
-```
-ffrs "convert video.mp4 to video.avi"
-```
+1. Parses and validates the command and input file.
+2. Prints the ffmpeg command it will run.
+3. Runs ffmpeg immediately.
 
-ffrs will show:
-```
-ffmpeg -i "video.mp4" "video.avi"
-```
+Commands run immediately after being printed. If you only want to see the command, use `--dry-run`.
 
-Then it will run this command to perform the conversion.
-
-### Dry Run
-
-To see what ffrs would do without actually doing it, use the `--dry-run` option:
+For example:
 
 ```bash
 ffrs --dry-run "convert video.mp4 to video.avi"
 ```
 
-This will show you the command ffrs would run but won't actually execute it.
+prints:
+
+```text
+ffmpeg "-i" "video.mp4" "video.avi"
+```
+
+### Paths with spaces
+
+Wrap the file names in double quotes inside the command, and wrap the whole command in single quotes in your shell:
+
+```bash
+ffrs 'convert "my video.mp4" to "my video.avi"'
+```
+
+Relative paths (`sub/clip.mp4`, `./clip.mp4`, `../clip.mp4`), absolute paths, and Windows paths (`C:\Users\me\clip.mp4`) are supported.
+
+### Output rules
+
+- The output must use a supported extension; `out.txt` is rejected.
+- The output must be a different file from the input.
+- The input file must exist and be a file.
+- `--output` must name a directory that already exists. `ffrs` uses only the output file name from the command and places it in that directory. It does not create directories.
+
+Examples:
+
+```bash
+# Same directory as the input
+ffrs "convert video.mp4 to video.avi"
+
+# Into an existing directory
+ffrs --output /path/to/output "convert video.mp4 to video.avi"
+```
 
 ## Common Tasks
 
-### Converting Video Formats
+### Converting video formats
 
-**Convert MP4 to AVI:**
-```
+```bash
 ffrs "convert myvideo.mp4 to myvideo.avi"
-```
-
-**Convert to different format with same name:**
-```
 ffrs "convert myvideo.mp4 to .avi"
 ```
 
-### Converting Audio Formats
+### Extracting audio
 
-**Extract audio from video:**
-```
+```bash
 ffrs "extract audio from myvideo.mp4 to myaudio.mp3"
 ```
 
-**Convert audio file format:**
+Shorter forms work too:
+
+```bash
+ffrs "extract audio myvideo.mp4 to myaudio.mp3"
+ffrs "extract myvideo.mp4 to myaudio.mp3"
 ```
+
+### Converting audio formats
+
+```bash
 ffrs "convert mysong.wav to mysong.mp3"
 ```
 
-### Converting Images
+### Converting images
 
-**Convert image formats:**
-```
-ffrs "convert photo.jpg to photo.png"
-```
-
-### Specifying Output Directory
-
-To save the output file in a different directory:
 ```bash
-ffrs --output /path/to/output "convert video.mp4 to video.avi"
+ffrs "convert photo.jpg to photo.png"
 ```
 
 ## Troubleshooting
 
-### Common Issues and Solutions
+### "ffmpeg is not available in PATH"
 
-**Error: "ffmpeg is not available in PATH"**
-- Make sure ffmpeg is installed on your system
-- Check that ffmpeg is in your system PATH
-- Try running `ffmpeg -version` in your terminal to verify
+Install ffmpeg and make sure it is accessible from your terminal. Check with `ffmpeg -version`.
 
-**Error: "No such file or directory"**
-- Check that the file path is correct
-- Make sure the file exists in the specified location
-- Check for typos in the filename
+### "Input file does not exist"
 
-**Error: "Unsupported format"**
-- Make sure the input file is in a supported format
-- ffrs supports: MP4, AVI, MOV, WMV, MKV, WebM, MP3, WAV, FLAC, JPG, PNG, GIF
+Check the spelling and path of the input file. Run the command from the directory that contains it, or use an absolute path.
 
-**ffrs command not found**
-- Make sure ffrs is properly installed and in your PATH
-- On Windows, you might need to restart your command prompt after installation
-- On Mac/Linux, you might need to log out and back in
+### "output path must use a supported format"
 
-### Getting Help
+Give the output a supported extension such as `.mp4`, `.avi`, `.mp3`, or `.png`.
 
-If you need help with FF, you can:
-- Use `ffrs --help` to see available options
-- Check the output ffrs shows you before running commands
-- Look at the examples in this manual
+### "Output path must differ from input path"
+
+Choose a different output name or format; `ffrs` will not overwrite the input file.
+
+### "Output directory does not exist or is not a directory"
+
+Create the directory first, or pass a different existing directory to `--output`.
+
+### "Unsupported format"
+
+The input extension is not supported. See the supported formats list below.
+
+### `ffrs: command not found`
+
+Make sure `cargo install ffrs` completed and the Cargo bin directory is in your `PATH`. You may need to restart your terminal.
+
+### Getting help
+
+- `ffrs --help` lists the available options.
+- `ffrs --version` prints the installed version.
+- `ffrs --dry-run "..."` shows the generated command without running it.
 
 ## Reference
 
-### Supported Operations
+### Supported operations
 
-- `convert`: Convert a file from one format to another
-- `extract audio`: Extract audio from a video file
-- (More operations may be added in future versions)
+- `convert`: convert a file to another supported format
+- `extract audio`: extract audio from a video file
 
-### Supported Formats
+### Supported formats
 
-**Video**: MP4, AVI, MOV, WMV, MKV, WebM
-**Audio**: MP3, WAV, FLAC
-**Images**: JPG, PNG, GIF
+- **Video**: MP4, AVI, MOV, WMV, MKV, WebM
+- **Audio**: MP3, WAV, FLAC
+- **Images**: JPG, PNG, GIF
 
-### Command Options
+### Command options
 
-- `--interactive`: Start ffrs in interactive mode
-- `--dry-run`: Show the command without executing it
-- `--output [path]`: Specify output directory
-- `--help`: Show help information
-- `--version`: Show version information
+- `--interactive`: start interactive mode
+- `--dry-run`: print the command without executing it
+- `--output <dir>`: write the output file into an existing directory
+- `--help`: show help
+- `--version`: show version
 
-### File Naming
+### File naming
 
-ffrs follows predictable naming rules:
-- Input: `video.mp4` → Output: `video.avi` (when converting to different format)
-- Input: `path/to/video.mp4` → Output: `path/to/video.avi` (output in same directory)
-- Input: `video.mp4` → Output: `video.avi` (when using format like `.avi`)
+- `video.mp4` → `video.avi` when converting to a different format
+- `path/to/video.mp4` → `path/to/video.avi` (same directory as the input)
+- `convert video.mp4 to .avi` → `video.avi`
 
-### Exit Codes
+### Exit codes
 
-- `0`: Success
-- `1`: User input error
-- `2`: FFmpeg execution failure
-- `>2`: Internal error
+- `0`: success
+- `1`: user input or CLI usage error
+- `2`: ffmpeg execution failure
+- `3`: internal error
