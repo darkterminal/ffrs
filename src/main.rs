@@ -1,19 +1,7 @@
 use clap::error::ErrorKind;
 use clap::Parser as ClapParser;
+use ffrs::{file_utils, CommandBuilder, FfError, Parser as GrammarParser, Runner, Tokenizer};
 use std::io;
-
-mod command_builder;
-mod errors;
-mod executor;
-mod grammar;
-mod intent;
-mod utils;
-
-use command_builder::CommandBuilder;
-use errors::FfError;
-use executor::runner::Runner;
-use grammar::{Parser as GrammarParser, Tokenizer};
-use utils::file_utils;
 
 #[derive(ClapParser)]
 #[command(version)]

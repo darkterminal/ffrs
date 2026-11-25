@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Output paths without a supported media extension now fail fast instead of reaching ffmpeg.
 - CLI usage errors now exit with code `1`; `--help` and `--version` still exit with `0`.
+- The binary now consumes the library crate instead of compiling a second copy of its modules.
 - `Cargo.lock` is now tracked, and non-crate files are excluded from package archives.
 - Rustfmt configuration now matches the crate's 2021 edition, and all sources are formatted.
 
