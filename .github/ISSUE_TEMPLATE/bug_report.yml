@@ -1,0 +1,49 @@
+name: Bug report
+description: Report incorrect CLI or library behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting. Please search existing issues first and redact private file paths.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the behavior you saw.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the exact ffrs command you ran.
+      placeholder: 'ffrs --dry-run "convert video.mp4 to video.avi"'
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ffrs version
+      description: Output of `ffrs --version`.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system and Rust toolchain
+      placeholder: Ubuntu 24.04, rustc 1.XX
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Actual output
+      description: Paste the error or generated command.
+      render: shell

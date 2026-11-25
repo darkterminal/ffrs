@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest a new capability or grammar form
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: Please check the user manual first to see whether the behavior already exists.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe what you want ffrs to do.
+    validations:
+      required: true
+  - type: textarea
+    id: syntax
+    attributes:
+      label: Proposed command syntax
+      placeholder: 'ffrs "extract audio from video.mp4 to audio.mp3"'
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include any existing command that almost works.
