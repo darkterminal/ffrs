@@ -1,5 +1,6 @@
+use clap::error::ErrorKind;
 use clap::Parser as ClapParser;
-use std::io::{self, Write};
+use std::io;
 
 mod command_builder;
 mod errors;
@@ -15,7 +16,7 @@ use grammar::{Parser as GrammarParser, Tokenizer};
 use utils::file_utils;
 
 #[derive(ClapParser)]
-#[command(name = "ff")]
+#[command(version)]
 #[command(about = "A CLI tool that translates plain English commands into ffmpeg commands")]
 struct Cli {
     #[arg(value_parser)]
@@ -32,10 +33,27 @@ struct Cli {
 }
 
 fn main() {
-    let args = Cli::parse();
+    let args = match Cli::try_parse() {
+        Ok(args) => args,
+        Err(error) => {
+            let exit_code = match error.kind() {
+                ErrorKind::DisplayHelp | ErrorKind::DisplayVersion => 0,
+                _ => 1,
+            };
+            let _ = error.print();
+            std::process::exit(exit_code);
+        }
+    };
 
     if args.interactive {
-        run_interactive_mode(args.dry_run, args.output); // ← pass output
+        let stdin = io::stdin();
+        let mut stdout = io::stdout();
+        if let Err(error) =
+            run_interactive_mode(stdin.lock(), &mut stdout, args.dry_run, args.output)
+        {
+            eprintln!("Error reading input: {}", error);
+            std::process::exit(1);
+        }
     } else if let Some(command) = args.command {
         run_direct_mode(&command, args.dry_run, args.output);
     } else {
@@ -44,39 +62,39 @@ fn main() {
     }
 }
 
-fn run_interactive_mode(dry_run: bool, output: Option<String>) {
-    // ← terima output
-    println!("FF - Media Conversion Tool (Interactive Mode)");
-    println!("Enter 'quit' or 'exit' to exit the program");
+fn run_interactive_mode<R: io::BufRead, W: io::Write>(
+    mut reader: R,
+    writer: &mut W,
+    dry_run: bool,
+    output: Option<String>,
+) -> io::Result<()> {
+    writeln!(writer, "FF - Media Conversion Tool (Interactive Mode)")?;
+    writeln!(writer, "Enter 'quit' or 'exit' to exit the program")?;
 
     loop {
-        print!("> ");
-        io::stdout().flush().unwrap();
+        write!(writer, "> ")?;
+        writer.flush()?;
 
         let mut input = String::new();
-        match io::stdin().read_line(&mut input) {
-            Ok(_) => {
-                let input = input.trim();
-                if input.eq_ignore_ascii_case("quit") || input.eq_ignore_ascii_case("exit") {
-                    break;
-                }
-                if !input.is_empty() {
-                    // clone() karena process_command consume Option<String>
-                    match process_command(input, dry_run, output.clone()) {
-                        Ok(_) => {}
-                        Err(e) => {
-                            eprintln!("{}", e);
-                            print_guidance(&e);
-                        }
-                    }
-                }
-            }
-            Err(error) => {
-                eprintln!("Error reading input: {}", error);
-                break;
+        let bytes_read = reader.read_line(&mut input)?;
+        if bytes_read == 0 {
+            break;
+        }
+
+        let input = input.trim();
+        if input.eq_ignore_ascii_case("quit") || input.eq_ignore_ascii_case("exit") {
+            break;
+        }
+        if !input.is_empty() {
+            // clone() karena process_command consume Option<String>
+            if let Err(error) = process_command(input, dry_run, output.clone()) {
+                eprintln!("{}", error);
+                print_guidance(&error);
             }
         }
     }
+
+    Ok(())
 }
 
 fn run_direct_mode(command: &str, dry_run: bool, output: Option<String>) {
@@ -94,9 +112,7 @@ fn print_guidance(err: &FfError) {
     match err {
         FfError::UserInput(msg) => {
             if msg.contains("Output directory") {
-                eprintln!(
-                    "Guidance: Create the output directory first or choose an existing one."
-                );
+                eprintln!("Guidance: Create the output directory first or choose an existing one.");
             } else if msg.contains("must differ from input") {
                 eprintln!("Guidance: Choose a different output file name or format.");
             } else if msg.contains("must use a supported format") {
@@ -198,4 +214,65 @@ fn process_command(command: &str, dry_run: bool, output: Option<String>) -> Resu
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    fn run_interactive(input: &str) -> (io::Result<()>, String) {
+        let mut output = Vec::new();
+        let result = run_interactive_mode(Cursor::new(input), &mut output, true, None);
+        let output = String::from_utf8(output).expect("interactive output should be UTF-8");
+        (result, output)
+    }
+
+    #[test]
+    fn interactive_mode_stops_at_eof() {
+        let (result, output) = run_interactive("");
+
+        assert!(result.is_ok());
+        assert_eq!(output.matches("> ").count(), 1, "output: {output}");
+    }
+
+    #[test]
+    fn interactive_mode_stops_after_quit() {
+        let (result, output) = run_interactive("quit\n");
+
+        assert!(result.is_ok());
+        assert_eq!(output.matches("> ").count(), 1, "output: {output}");
+    }
+
+    #[test]
+    fn interactive_mode_skips_blank_lines_before_eof() {
+        let (result, output) = run_interactive("\n\n");
+
+        assert!(result.is_ok());
+        assert_eq!(output.matches("> ").count(), 3, "output: {output}");
+    }
+
+    #[test]
+    fn interactive_mode_propagates_read_errors() {
+        struct FailingReader;
+
+        impl io::Read for FailingReader {
+            fn read(&mut self, _buf: &mut [u8]) -> io::Result<usize> {
+                Err(io::Error::other("boom"))
+            }
+        }
+
+        impl io::BufRead for FailingReader {
+            fn fill_buf(&mut self) -> io::Result<&[u8]> {
+                Err(io::Error::other("boom"))
+            }
+
+            fn consume(&mut self, _amount: usize) {}
+        }
+
+        let mut output = Vec::new();
+        let result = run_interactive_mode(FailingReader, &mut output, true, None);
+
+        assert!(result.is_err());
+    }
 }
