@@ -15,11 +15,19 @@ pub enum Token {
 
 /// Tokenizer for converting plain English commands into tokens.
 ///
-/// Uses `Vec<char>` internally for O(1) character access,
-/// making total tokenization O(n) instead of O(n²).
+/// Input is split on whitespace, except inside single or double quotes.
+/// Each raw token is then classified by its shape: an explicit format
+/// (`.avi`), a path (contains a separator or a file extension), a number,
+/// or a word.
 pub struct Tokenizer {
     chars: Vec<char>,
     position: usize,
+}
+
+#[derive(Debug)]
+struct RawToken {
+    text: String,
+    quoted: bool,
 }
 
 impl Tokenizer {
@@ -50,13 +58,11 @@ impl Tokenizer {
     /// A vector of `Token` enums representing the parsed tokens.
     pub fn tokenize(&mut self) -> Vec<Token> {
         let mut tokens = Vec::new();
-        while self.position < self.chars.len() {
-            if let Some(token) = self.next_token() {
-                tokens.push(token);
-            } else {
-                self.position += 1;
-            }
+
+        while let Some(raw) = self.next_raw_token() {
+            tokens.push(classify_token(raw));
         }
+
         tokens
     }
 
@@ -66,117 +72,106 @@ impl Tokenizer {
         self.chars.get(self.position).copied()
     }
 
-    /// Peeks at a character `offset` positions ahead without advancing.
-    #[inline]
-    fn peek_at(&self, offset: usize) -> Option<char> {
-        self.chars.get(self.position + offset).copied()
-    }
-
     /// Extracts a string slice from `start` to `end` (char indices).
     #[inline]
     fn slice(&self, start: usize, end: usize) -> String {
         self.chars[start..end].iter().collect()
     }
 
-    fn next_token(&mut self) -> Option<Token> {
-        // Skip whitespace
-        while let Some(ch) = self.peek() {
-            if ch.is_whitespace() {
-                self.position += 1;
-            } else {
-                break;
-            }
+    /// Reads one whitespace-delimited token, honoring quotes.
+    ///
+    /// Every call advances `position` when it returns a token, so an
+    /// unexpected character can never stall tokenization.
+    fn next_raw_token(&mut self) -> Option<RawToken> {
+        while matches!(self.peek(), Some(ch) if ch.is_whitespace()) {
+            self.position += 1;
         }
 
         if self.position >= self.chars.len() {
             return None;
         }
 
-        match self.peek().unwrap() {
-            '.' => Some(self.tokenize_format()),
-            '/' => Some(self.tokenize_path()),
-            ch if ch.is_numeric() => Some(self.tokenize_number()),
-            _ => Some(self.tokenize_word()),
-        }
-    }
+        if matches!(self.peek(), Some('"' | '\'')) {
+            let quote = self.peek()?;
+            self.position += 1;
 
-    fn tokenize_word(&mut self) -> Token {
-        let start = self.position;
-        while let Some(ch) = self.peek() {
-            if ch.is_alphanumeric() || ch == '_' || ch == '.' {
-                self.position += 1;
-            } else {
-                break;
-            }
-        }
-        let word = self.slice(start, self.position);
-        if word.contains('.') && !word.starts_with('.') {
-            Token::Path(word)
-        } else {
-            Token::Word(word.to_lowercase())
-        }
-    }
-
-    fn tokenize_path(&mut self) -> Token {
-        let start = self.position;
-        while let Some(ch) = self.peek() {
-            if ch.is_alphanumeric() || ch == '/' || ch == '_' || ch == '-' || ch == '~' {
-                self.position += 1;
-            } else if ch == '.' {
-                // Dot is part of path only if followed by alphanumeric (file extension)
-                if let Some(next_ch) = self.peek_at(1) {
-                    if next_ch.is_alphanumeric() {
-                        self.position += 1;
-                    } else {
-                        break;
-                    }
-                } else {
+            let start = self.position;
+            while let Some(ch) = self.peek() {
+                if ch == quote {
                     break;
                 }
-            } else {
-                break;
+                self.position += 1;
             }
-        }
-        let path = self.slice(start, self.position);
-        Token::Path(path)
-    }
 
-    fn tokenize_format(&mut self) -> Token {
+            let text = self.slice(start, self.position);
+            if self.peek() == Some(quote) {
+                self.position += 1;
+            }
+
+            return Some(RawToken { text, quoted: true });
+        }
+
         let start = self.position;
-        if self.peek() == Some('.') {
+        while matches!(self.peek(), Some(ch) if !ch.is_whitespace()) {
             self.position += 1;
         }
-        while let Some(ch) = self.peek() {
-            if ch.is_alphanumeric() {
-                self.position += 1;
-            } else {
-                break;
-            }
-        }
-        let format = self.slice(start, self.position);
-        Token::Format(format.to_lowercase())
+
+        Some(RawToken {
+            text: self.slice(start, self.position),
+            quoted: false,
+        })
+    }
+}
+
+fn classify_token(raw: RawToken) -> Token {
+    let text = raw.text;
+
+    if is_format_literal(&text) {
+        return Token::Format(text.to_lowercase());
     }
 
-    fn tokenize_number(&mut self) -> Token {
-        let start = self.position;
-        let mut has_decimal = false;
-        while let Some(ch) = self.peek() {
-            if ch.is_numeric() {
-                self.position += 1;
-            } else if ch == '.' && !has_decimal {
-                has_decimal = true;
-                self.position += 1;
-            } else {
-                break;
-            }
-        }
-        let number_str = self.slice(start, self.position);
-        if let Ok(number) = number_str.parse::<f64>() {
-            Token::Number(number)
-        } else {
-            Token::Unknown(number_str)
-        }
+    if is_path_literal(&text, raw.quoted) {
+        return Token::Path(text);
     }
+
+    let is_number = if text.contains('.') {
+        text.chars().all(|ch| ch.is_ascii_digit() || ch == '.')
+    } else {
+        text.chars().all(|ch| ch.is_ascii_digit())
+    };
+
+    if is_number {
+        return match text.parse::<f64>() {
+            Ok(number) => Token::Number(number),
+            Err(_) => Token::Unknown(text),
+        };
+    }
+
+    Token::Word(text.to_lowercase())
+}
+
+fn is_format_literal(text: &str) -> bool {
+    text.starts_with('.') && text.len() > 1 && text[1..].chars().all(|ch| ch.is_alphanumeric())
+}
+
+fn is_path_literal(text: &str, quoted: bool) -> bool {
+    if text.is_empty() {
+        return false;
+    }
+
+    if text.contains('/') || text.contains('\\') {
+        return true;
+    }
+
+    if text.starts_with('.') {
+        return false;
+    }
+
+    if quoted {
+        return text.contains('.');
+    }
+
+    text.contains('.')
 }
 
 #[cfg(test)]
@@ -224,6 +219,110 @@ mod tests {
                 Token::Path("/home/user/video.mp4".to_string()),
                 Token::Word("to".to_string()),
                 Token::Path("output.avi".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_relative_paths() {
+        let mut tokenizer = Tokenizer::new("convert sub/clip.mp4 to ../out.avi");
+        let tokens = tokenizer.tokenize();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Word("convert".to_string()),
+                Token::Path("sub/clip.mp4".to_string()),
+                Token::Word("to".to_string()),
+                Token::Path("../out.avi".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_dot_relative_paths() {
+        let mut tokenizer = Tokenizer::new("convert ./clip.mp4 to ./out.avi");
+        let tokens = tokenizer.tokenize();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Word("convert".to_string()),
+                Token::Path("./clip.mp4".to_string()),
+                Token::Word("to".to_string()),
+                Token::Path("./out.avi".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_quoted_paths() {
+        let mut tokenizer = Tokenizer::new("convert \"my video.mp4\" to 'my video.avi'");
+        let tokens = tokenizer.tokenize();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Word("convert".to_string()),
+                Token::Path("my video.mp4".to_string()),
+                Token::Word("to".to_string()),
+                Token::Path("my video.avi".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_windows_paths() {
+        let mut tokenizer = Tokenizer::new("convert C:\\Users\\me\\clip.mp4 to D:\\out\\clip.avi");
+        let tokens = tokenizer.tokenize();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Word("convert".to_string()),
+                Token::Path("C:\\Users\\me\\clip.mp4".to_string()),
+                Token::Word("to".to_string()),
+                Token::Path("D:\\out\\clip.avi".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_tokenize_unc_path() {
+        let mut tokenizer = Tokenizer::new("convert \\\\server\\share\\clip.mp4 to out.avi");
+        let tokens = tokenizer.tokenize();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Word("convert".to_string()),
+                Token::Path("\\\\server\\share\\clip.mp4".to_string()),
+                Token::Word("to".to_string()),
+                Token::Path("out.avi".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_keywords_are_case_insensitive() {
+        let mut tokenizer = Tokenizer::new("CONVERT clip.mp4 TO out.avi");
+        let tokens = tokenizer.tokenize();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Word("convert".to_string()),
+                Token::Path("clip.mp4".to_string()),
+                Token::Word("to".to_string()),
+                Token::Path("out.avi".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_unexpected_character_still_advances() {
+        let mut tokenizer = Tokenizer::new("! convert clip.mp4");
+        let tokens = tokenizer.tokenize();
+        assert_eq!(
+            tokens,
+            vec![
+                Token::Word("!".to_string()),
+                Token::Word("convert".to_string()),
+                Token::Path("clip.mp4".to_string()),
             ]
         );
     }

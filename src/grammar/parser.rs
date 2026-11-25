@@ -254,4 +254,40 @@ mod tests {
         assert_eq!(intent.input_path, PathBuf::from("/tmp/v1.2/clip.mp4"));
         assert_eq!(intent.output_path, PathBuf::from("/tmp/v1.2/out.avi"));
     }
+
+    #[test]
+    fn test_parse_relative_paths() {
+        let mut tokenizer = Tokenizer::new("convert sub/clip.mp4 to ../out.avi");
+        let tokens = tokenizer.tokenize();
+        let mut parser = Parser::new(tokens);
+        let intent = parser.parse().unwrap();
+
+        assert_eq!(intent.input_path, PathBuf::from("sub/clip.mp4"));
+        assert_eq!(intent.output_path, PathBuf::from("../out.avi"));
+    }
+
+    #[test]
+    fn test_parse_quoted_path_with_spaces() {
+        let mut tokenizer = Tokenizer::new("convert \"my video.mp4\" to \"my video.avi\"");
+        let tokens = tokenizer.tokenize();
+        let mut parser = Parser::new(tokens);
+        let intent = parser.parse().unwrap();
+
+        assert_eq!(intent.input_path, PathBuf::from("my video.mp4"));
+        assert_eq!(intent.output_path, PathBuf::from("my video.avi"));
+    }
+
+    #[test]
+    fn test_parse_windows_paths() {
+        let mut tokenizer = Tokenizer::new("convert C:\\Users\\me\\clip.mp4 to D:\\out\\clip.avi");
+        let tokens = tokenizer.tokenize();
+        let mut parser = Parser::new(tokens);
+        let intent = parser.parse().unwrap();
+
+        assert_eq!(
+            intent.input_path,
+            PathBuf::from("C:\\Users\\me\\clip.mp4")
+        );
+        assert_eq!(intent.output_path, PathBuf::from("D:\\out\\clip.avi"));
+    }
 }
