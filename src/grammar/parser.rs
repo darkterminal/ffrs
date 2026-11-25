@@ -21,6 +21,8 @@ pub enum ParseError {
     InvalidPath(String),
     /// An unsupported format was specified
     UnsupportedFormat(String),
+    /// The output path is missing a supported extension or equals the input
+    InvalidOutputPath(String),
 }
 
 impl std::fmt::Display for ParseError {
@@ -30,6 +32,9 @@ impl std::fmt::Display for ParseError {
             ParseError::MissingToken(expected) => write!(f, "Missing expected token: {}", expected),
             ParseError::InvalidPath(path) => write!(f, "Invalid path: {}", path),
             ParseError::UnsupportedFormat(format) => write!(f, "Unsupported format: {}", format),
+            ParseError::InvalidOutputPath(message) => {
+                write!(f, "Invalid output path: {}", message)
+            }
         }
     }
 }
@@ -64,8 +69,18 @@ impl Parser {
 
         let output_path = self.parse_output_path_or_format(&input_path)?;
 
-        if output_path.contains('.') && !file_utils::is_supported_format(&output_path) {
-            return Err(ParseError::UnsupportedFormat(output_path.clone()));
+        if !file_utils::is_supported_format(&output_path) {
+            return Err(ParseError::InvalidOutputPath(format!(
+                "output path must use a supported format: {}",
+                output_path
+            )));
+        }
+
+        if file_utils::same_file(&input_path, &output_path) {
+            return Err(ParseError::InvalidOutputPath(format!(
+                "output path must differ from input path: {}",
+                output_path
+            )));
         }
 
         Ok(Intent {
@@ -207,5 +222,36 @@ mod tests {
         assert_eq!(intent.operation, OperationType::Convert);
         assert_eq!(intent.input_path, PathBuf::from("video.mp4"));
         assert_eq!(intent.output_path, PathBuf::from("video.avi"));
+    }
+
+    #[test]
+    fn test_parse_rejects_output_equal_to_input() {
+        let mut tokenizer = Tokenizer::new("convert video.mp4 to .mp4");
+        let tokens = tokenizer.tokenize();
+        let mut parser = Parser::new(tokens);
+        let error = parser.parse().unwrap_err();
+
+        assert!(matches!(error, ParseError::InvalidOutputPath(_)));
+    }
+
+    #[test]
+    fn test_parse_rejects_output_without_supported_extension() {
+        let mut tokenizer = Tokenizer::new("convert video.mp4 to /tmp/out");
+        let tokens = tokenizer.tokenize();
+        let mut parser = Parser::new(tokens);
+        let error = parser.parse().unwrap_err();
+
+        assert!(matches!(error, ParseError::InvalidOutputPath(_)));
+    }
+
+    #[test]
+    fn test_parse_accepts_dots_in_output_directory() {
+        let mut tokenizer = Tokenizer::new("convert /tmp/v1.2/clip.mp4 to /tmp/v1.2/out.avi");
+        let tokens = tokenizer.tokenize();
+        let mut parser = Parser::new(tokens);
+        let intent = parser.parse().unwrap();
+
+        assert_eq!(intent.input_path, PathBuf::from("/tmp/v1.2/clip.mp4"));
+        assert_eq!(intent.output_path, PathBuf::from("/tmp/v1.2/out.avi"));
     }
 }
