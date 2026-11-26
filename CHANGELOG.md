@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Grammar parameters for `resize` (`<width>x<height>`) and `transcode` (codec), with fail-fast validation.
 - Tag-triggered release workflow that builds Linux, macOS, and Windows binaries and attaches them to the GitHub release.
 - Regression test for fail-fast behavior when `--output` points to a missing directory.
+- Jekyll site with a landing page and a chaptered user manual for GitHub Pages.
 
 ### Changed
 
@@ -27,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documented the protected `main` policy: six required checks, no force pushes or deletion, and an explicit admin bypass.
 - Repository metadata now describes `ffrs` as a Rust CLI, points to crates.io, and uses corrected `ffmpeg`/`rust` topics.
 - Rewrote the README as a conventional open-source README with a verified quickstart and documentation links.
+- Reorganized the single-file user manual into site chapters and kept the old path as a pointer.
+- Excluded website assets from the published crate package.
 - Recorded `ffrs` as the single CLI identity; no `ff` alias is added.
 - Recorded deferred version synchronization; maintenance PRs do not bump versions or publish.
 - Documented the fail-fast `--output` policy and why additional formats are deferred.

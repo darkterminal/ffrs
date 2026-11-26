@@ -12,7 +12,7 @@ documentation = "https://docs.rs/ffrs"
 readme = "README.md"
 keywords = ["cli", "ffmpeg", "media", "conversion", "utility"]
 categories = ["command-line-utilities", "multimedia"]
-exclude = [".github", "media", "QWEN.md"]
+exclude = [".github", "docs", "media", "QWEN.md"]
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }
