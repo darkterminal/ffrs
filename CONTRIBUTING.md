@@ -10,6 +10,8 @@ cd ffrs
 cargo build --locked
 ```
 
+Canonical links: repository <https://github.com/darkterminal/ffrs>, crate <https://crates.io/crates/ffrs>, API docs <https://docs.rs/ffrs>.
+
 Install Rust 1.85 or newer. That is the declared minimum supported version (MSRV) in `Cargo.toml`, and CI verifies it with a 1.85.0 job. Actual conversion needs `ffmpeg` in `PATH`, but the test suite does not execute ffmpeg and does not need it installed.
 
 To run the CLI locally:
