@@ -2,6 +2,7 @@
 layout: manual
 title: Installation
 description: "Install ffrs and ffmpeg on Linux, macOS, and Windows."
+permalink: /manual/installation/
 ---
 
 ## Installation

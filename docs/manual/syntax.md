@@ -2,6 +2,7 @@
 layout: manual
 title: Command syntax
 description: "Operations, parameters, and validation rules for ffrs commands."
+permalink: /manual/syntax/
 ---
 
 ## Command syntax

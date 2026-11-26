@@ -2,6 +2,7 @@
 layout: manual
 title: Usage
 description: "Direct mode, interactive mode, and command execution rules in ffrs."
+permalink: /manual/usage/
 ---
 
 ## Usage

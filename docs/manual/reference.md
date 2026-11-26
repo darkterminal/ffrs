@@ -2,6 +2,7 @@
 layout: manual
 title: Reference
 description: "ffrs operations, formats, options, exit codes, and library API."
+permalink: /manual/reference/
 ---
 
 ## Reference

@@ -2,6 +2,7 @@
 layout: manual
 title: Common tasks
 description: "Everyday ffrs recipes for conversion, audio, resizing, and codecs."
+permalink: /manual/tasks/
 ---
 
 ## Common tasks

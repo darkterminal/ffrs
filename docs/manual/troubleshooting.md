@@ -2,6 +2,7 @@
 layout: manual
 title: Troubleshooting
 description: "Common ffrs errors and how to fix them."
+permalink: /manual/troubleshooting/
 ---
 
 ## Troubleshooting
