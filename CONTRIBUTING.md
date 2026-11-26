@@ -76,6 +76,10 @@ Do not bump the version, create tags, or publish releases as part of a normal ma
 
 Force pushes and deletion of `main` are blocked. Branch protection does not enforce these checks on administrators (`enforce_admins: false`), so an administrator can bypass them in an emergency. Treat that as an exception, not the normal path.
 
+## CLI identity
+
+The crate and binary are both named `ffrs`. There is no `ff` alias and no second binary target. Adding an alias requires a separate decision because it changes the installed command name and help output.
+
 ## Grammar changes
 
 The plain-English grammar is implemented in `src/grammar/tokenizer.rs` and `src/grammar/parser.rs`. When changing it:
