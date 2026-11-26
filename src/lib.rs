@@ -18,7 +18,7 @@ pub mod grammar;
 pub mod intent;
 pub mod utils;
 
-pub use command_builder::{CommandBuilder, FfmpegCommand};
+pub use command_builder::{BuildError, CommandBuilder, FfmpegCommand};
 pub use errors::FfError;
 pub use executor::runner::Runner;
 pub use grammar::{Parser, Tokenizer};

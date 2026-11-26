@@ -18,6 +18,23 @@ impl FfmpegCommand {
     }
 }
 
+/// Error produced when an intent cannot be turned into a valid command.
+#[derive(Debug)]
+pub enum BuildError {
+    /// The intent contains a path that cannot produce a usable command.
+    InvalidIntent(String),
+}
+
+impl std::fmt::Display for BuildError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BuildError::InvalidIntent(message) => write!(f, "Invalid intent: {}", message),
+        }
+    }
+}
+
+impl std::error::Error for BuildError {}
+
 /// Command builder for converting intents into ffmpeg commands.
 #[derive(Debug, Default)]
 pub struct CommandBuilder;
@@ -29,10 +46,7 @@ impl CommandBuilder {
     }
 
     /// Builds an ffmpeg command from the given intent.
-    pub fn build_command(
-        &self,
-        intent: &Intent,
-    ) -> Result<FfmpegCommand, Box<dyn std::error::Error>> {
+    pub fn build_command(&self, intent: &Intent) -> Result<FfmpegCommand, BuildError> {
         self.build_command_with_output_path(intent, intent.output_path.clone())
     }
 
@@ -41,7 +55,18 @@ impl CommandBuilder {
         &self,
         intent: &Intent,
         output_path: PathBuf,
-    ) -> Result<FfmpegCommand, Box<dyn std::error::Error>> {
+    ) -> Result<FfmpegCommand, BuildError> {
+        if intent.input_path.as_os_str().is_empty() {
+            return Err(BuildError::InvalidIntent(
+                "input path must not be empty".to_string(),
+            ));
+        }
+        if output_path.as_os_str().is_empty() {
+            return Err(BuildError::InvalidIntent(
+                "output path must not be empty".to_string(),
+            ));
+        }
+
         let input_path = intent.input_path.to_string_lossy().to_string();
         let output_path = output_path.to_string_lossy().to_string();
 
@@ -151,5 +176,37 @@ mod tests {
             cmd.args,
             vec!["-i", "input.mp4", "-vf", "scale=1280:720", "output.mp4"]
         );
+    }
+
+    #[test]
+    fn test_rejects_empty_input_path() {
+        let builder = CommandBuilder::new();
+        let intent = Intent {
+            operation: OperationType::Convert,
+            input_path: PathBuf::new(),
+            output_path: PathBuf::from("output.mp4"),
+            parameters: std::collections::HashMap::new(),
+        };
+
+        let error = builder.build_command(&intent).unwrap_err();
+        assert!(matches!(error, BuildError::InvalidIntent(_)));
+        assert_eq!(
+            error.to_string(),
+            "Invalid intent: input path must not be empty"
+        );
+    }
+
+    #[test]
+    fn test_rejects_empty_output_path() {
+        let builder = CommandBuilder::new();
+        let intent = Intent {
+            operation: OperationType::Convert,
+            input_path: PathBuf::from("input.mp4"),
+            output_path: PathBuf::new(),
+            parameters: std::collections::HashMap::new(),
+        };
+
+        let error = builder.build_command(&intent).unwrap_err();
+        assert!(matches!(error, BuildError::InvalidIntent(_)));
     }
 }
