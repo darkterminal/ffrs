@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documented the protected `main` policy: six required checks, no force pushes or deletion, and an explicit admin bypass.
 - Repository metadata now describes `ffrs` as a Rust CLI, points to crates.io, and uses corrected `ffmpeg`/`rust` topics.
 - Recorded `ffrs` as the single CLI identity; no `ff` alias is added.
+- Recorded deferred version synchronization; maintenance PRs do not bump versions or publish.
 - Output paths without a supported media extension now fail fast instead of reaching ffmpeg.
 - CLI usage errors now exit with code `1`; `--help` and `--version` still exit with `0`.
 - The binary now consumes the library crate instead of compiling a second copy of its modules.
