@@ -1,0 +1,9 @@
+title: ffrs
+description: "Plain English commands in, deterministic ffmpeg commands out."
+url: https://darkterminal.github.io
+baseurl: /ffrs
+markdown: kramdown
+highlighter: rouge
+exclude:
+  - Gemfile
+  - Gemfile.lock

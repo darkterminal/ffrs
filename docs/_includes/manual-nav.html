@@ -1,0 +1,12 @@
+<aside class="manual-nav" aria-label="Manual chapters">
+  <p class="nav-title">Manual</p>
+  <ol>
+    <li><a href="{{ '/manual/' | relative_url }}"{% if page.url == '/manual/' %} class="active"{% endif %}>Overview</a></li>
+    <li><a href="{{ '/manual/installation/' | relative_url }}"{% if page.url == '/manual/installation/' %} class="active"{% endif %}>Installation</a></li>
+    <li><a href="{{ '/manual/usage/' | relative_url }}"{% if page.url == '/manual/usage/' %} class="active"{% endif %}>Usage</a></li>
+    <li><a href="{{ '/manual/syntax/' | relative_url }}"{% if page.url == '/manual/syntax/' %} class="active"{% endif %}>Command syntax</a></li>
+    <li><a href="{{ '/manual/tasks/' | relative_url }}"{% if page.url == '/manual/tasks/' %} class="active"{% endif %}>Common tasks</a></li>
+    <li><a href="{{ '/manual/troubleshooting/' | relative_url }}"{% if page.url == '/manual/troubleshooting/' %} class="active"{% endif %}>Troubleshooting</a></li>
+    <li><a href="{{ '/manual/reference/' | relative_url }}"{% if page.url == '/manual/reference/' %} class="active"{% endif %}>Reference</a></li>
+  </ol>
+</aside>
