@@ -178,6 +178,27 @@ ffrs "convert mysong.wav to mysong.mp3"
 ffrs "convert photo.jpg to photo.png"
 ```
 
+### Resizing video
+
+```bash
+ffrs "resize myvideo.mp4 to 1280x720 small.mp4"
+```
+
+The width and height must be positive integers separated by `x`. If you omit the parameter, `ffrs` uses 1920x1080:
+
+```bash
+ffrs "resize myvideo.mp4 to small.mp4"
+```
+
+### Transcoding with a specific codec
+
+```bash
+ffrs "transcode myvideo.mp4 to h265 out.mp4"
+ffrs "transcode myvideo.mp4 to opus out.mp4"
+```
+
+Video codecs (`h264`, `libx264`, `h265`, `libx265`, `vp9`, `av1`, `mpeg4`) set `-c:v`; audio codecs (`aac`, `mp3`, `flac`, `opus`, `vorbis`) set `-c:a`. Without a parameter, `ffrs` uses libx264 + aac. An unknown codec fails before ffmpeg runs.
+
 ## Troubleshooting
 
 ### "ffmpeg is not available in PATH"
@@ -224,6 +245,8 @@ Make sure `cargo install ffrs` completed and the Cargo bin directory is in your 
 
 - `convert`: convert a file to another supported format
 - `extract audio`: extract audio from a video file
+- `resize`: scale a video to `<width>x<height>`
+- `transcode`: choose a video or audio codec
 
 ### Supported formats
 

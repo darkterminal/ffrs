@@ -141,13 +141,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Command syntax
 
 ```text
-[operation] <input> to <output>
+[operation] <input> to [parameter] <output>
 ```
 
 Supported operations:
 
 - `convert` — convert a file to another supported format
 - `extract audio from <input> to <output>` — extract audio (shorter forms `extract audio <input> ...`, `extract <input> ...`, and `extractaudio <input> ...` also work)
+- `resize <input> to <W>x<H> <output>` — scale to a width and height; omit the parameter to use 1920x1080
+- `transcode <input> to <codec> <output>` — set a video codec (`h264`, `libx264`, `h265`, `libx265`, `vp9`, `av1`, `mpeg4`) or audio codec (`aac`, `mp3`, `flac`, `opus`, `vorbis`); omit the parameter to use libx264 + aac
+
+Malformed dimensions and unknown codecs fail fast before ffmpeg is invoked.
 
 Rules:
 

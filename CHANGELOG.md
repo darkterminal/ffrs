@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ffrs` identity for clap so `--help` and usage output match the binary name.
 - Documented `extract audio from <input> to <output>` syntax, plus shorter `extract audio <input> ...` and `extract <input> ...` forms.
 - `--yes` flag to overwrite an existing output file; the default never overwrites.
+- Grammar parameters for `resize` (`<width>x<height>`) and `transcode` (codec), with fail-fast validation.
 
 ### Changed
 

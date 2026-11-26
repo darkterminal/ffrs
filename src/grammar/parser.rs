@@ -1,6 +1,7 @@
 use crate::grammar::tokenizer::Token;
 use crate::intent::types::{Intent, OperationType};
 use crate::utils::file_utils;
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 /// Parser for converting tokens into structured intents.
@@ -23,6 +24,8 @@ pub enum ParseError {
     UnsupportedFormat(String),
     /// The output path is missing a supported extension or equals the input
     InvalidOutputPath(String),
+    /// A dimension or codec parameter was malformed or unknown
+    InvalidParameter(String),
 }
 
 impl std::fmt::Display for ParseError {
@@ -34,6 +37,9 @@ impl std::fmt::Display for ParseError {
             ParseError::UnsupportedFormat(format) => write!(f, "Unsupported format: {}", format),
             ParseError::InvalidOutputPath(message) => {
                 write!(f, "Invalid output path: {}", message)
+            }
+            ParseError::InvalidParameter(message) => {
+                write!(f, "Invalid parameter: {}", message)
             }
         }
     }
@@ -75,6 +81,8 @@ impl Parser {
 
         self.expect_word("to")?;
 
+        let parameters = self.parse_parameters(&operation)?;
+
         let output_path = self.parse_output_path_or_format(&input_path)?;
 
         if !file_utils::is_supported_format(&output_path) {
@@ -95,7 +103,7 @@ impl Parser {
             operation,
             input_path: PathBuf::from(input_path),
             output_path: PathBuf::from(output_path),
-            parameters: std::collections::HashMap::new(),
+            parameters,
         })
     }
 
@@ -182,6 +190,52 @@ impl Parser {
         }
     }
 
+    /// Reads an operation-specific parameter placed between `to` and the
+    /// output path. Commands without parameters keep the documented defaults.
+    fn parse_parameters(
+        &mut self,
+        operation: &OperationType,
+    ) -> Result<HashMap<String, String>, ParseError> {
+        let mut parameters = HashMap::new();
+
+        match operation {
+            OperationType::Resize => {
+                if let Some(Token::Word(word)) = self.tokens.get(self.position) {
+                    if looks_like_dimensions(word) {
+                        let (width, height) = parse_dimensions(word).ok_or_else(|| {
+                            ParseError::InvalidParameter(format!(
+                                "expected <width>x<height>, got: {}",
+                                word
+                            ))
+                        })?;
+                        parameters.insert("width".to_string(), width);
+                        parameters.insert("height".to_string(), height);
+                        self.position += 1;
+                    }
+                }
+            }
+            OperationType::Transcode => {
+                if let Some(Token::Word(word)) = self.tokens.get(self.position) {
+                    match codec_parameter(word) {
+                        Some(key) => {
+                            parameters.insert(key.to_string(), word.clone());
+                            self.position += 1;
+                        }
+                        None => {
+                            return Err(ParseError::InvalidParameter(format!(
+                                "unknown codec: {}",
+                                word
+                            )));
+                        }
+                    }
+                }
+            }
+            OperationType::Convert | OperationType::ExtractAudio => {}
+        }
+
+        Ok(parameters)
+    }
+
     fn parse_output_path_or_format(&mut self, input_path: &str) -> Result<String, ParseError> {
         if self.position >= self.tokens.len() {
             return Err(ParseError::MissingToken(
@@ -232,6 +286,42 @@ impl Parser {
                 "Expected output path or format".to_string(),
             )),
         }
+    }
+}
+
+fn looks_like_dimensions(word: &str) -> bool {
+    word.contains('x')
+        && word
+            .chars()
+            .next()
+            .is_some_and(|character| character.is_ascii_digit())
+}
+
+fn parse_dimensions(word: &str) -> Option<(String, String)> {
+    let mut parts = word.split('x');
+    let width = parts.next()?;
+    let height = parts.next()?;
+
+    if parts.next().is_some() || width.is_empty() || height.is_empty() {
+        return None;
+    }
+    if !width.chars().all(|character| character.is_ascii_digit())
+        || !height.chars().all(|character| character.is_ascii_digit())
+    {
+        return None;
+    }
+    if width.parse::<u32>().ok()? == 0 || height.parse::<u32>().ok()? == 0 {
+        return None;
+    }
+
+    Some((width.to_string(), height.to_string()))
+}
+
+fn codec_parameter(word: &str) -> Option<&'static str> {
+    match word {
+        "h264" | "libx264" | "h265" | "libx265" | "vp9" | "av1" | "mpeg4" => Some("vcodec"),
+        "aac" | "mp3" | "flac" | "opus" | "vorbis" => Some("acodec"),
+        _ => None,
     }
 }
 
@@ -383,5 +473,61 @@ mod tests {
             error,
             ParseError::UnexpectedToken(_) | ParseError::MissingToken(_)
         ));
+    }
+
+    #[test]
+    fn test_parse_resize_dimensions() {
+        let intent = parse("resize video.mp4 to 1280x720 out.mp4").unwrap();
+
+        assert_eq!(
+            intent.parameters.get("width").map(String::as_str),
+            Some("1280")
+        );
+        assert_eq!(
+            intent.parameters.get("height").map(String::as_str),
+            Some("720")
+        );
+    }
+
+    #[test]
+    fn test_parse_transcode_codec() {
+        let intent = parse("transcode video.mp4 to h265 out.mp4").unwrap();
+
+        assert_eq!(
+            intent.parameters.get("vcodec").map(String::as_str),
+            Some("h265")
+        );
+        assert_eq!(intent.parameters.get("acodec"), None);
+    }
+
+    #[test]
+    fn test_parse_transcode_audio_codec() {
+        let intent = parse("transcode video.mp4 to opus out.mp4").unwrap();
+
+        assert_eq!(
+            intent.parameters.get("acodec").map(String::as_str),
+            Some("opus")
+        );
+    }
+
+    #[test]
+    fn test_parse_rejects_malformed_dimensions() {
+        let error = parse("resize video.mp4 to 1280x out.mp4").unwrap_err();
+
+        assert!(matches!(error, ParseError::InvalidParameter(_)));
+    }
+
+    #[test]
+    fn test_parse_rejects_unknown_codec() {
+        let error = parse("transcode video.mp4 to h266 out.mp4").unwrap_err();
+
+        assert!(matches!(error, ParseError::InvalidParameter(_)));
+    }
+
+    #[test]
+    fn test_parse_keeps_defaults_without_parameters() {
+        let intent = parse("resize video.mp4 to out.mp4").unwrap();
+
+        assert!(intent.parameters.is_empty());
     }
 }
