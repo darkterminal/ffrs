@@ -82,7 +82,7 @@ The crate and binary are both named `ffrs`. There is no `ff` alias and no second
 
 ## Release and version policy
 
-`Cargo.toml` stays at 0.1.0 until a deliberate release. Maintenance pull requests do not bump the version, create tags, publish GitHub releases, or run `cargo publish`.
+`Cargo.toml` stays at 0.2.0 until the next deliberate release. Maintenance pull requests do not bump the version, create tags, publish GitHub releases, or run `cargo publish`.
 
 At release time, align the manifest version, the `v*` tag, the GitHub release, crates.io, and docs.rs. Decide whether accumulated grammar changes are minor or patch before tagging; additive grammar changes are treated as minor.
 
