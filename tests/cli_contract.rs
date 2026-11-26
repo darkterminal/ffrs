@@ -1,4 +1,5 @@
 use std::process::{Command, Stdio};
+use tempfile::tempdir;
 
 fn ffrs() -> &'static str {
     env!("CARGO_BIN_EXE_ffrs")
@@ -65,4 +66,35 @@ fn interactive_mode_exits_on_eof() {
     assert_eq!(output.status.code(), Some(0));
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert_eq!(stdout.matches("> ").count(), 1, "stdout: {stdout}");
+}
+
+#[test]
+fn missing_output_directory_fails_fast() {
+    let dir = tempdir().expect("failed to create temp dir");
+    std::fs::write(dir.path().join("clip.mp4"), b"").expect("failed to write fixture");
+
+    let output = Command::new(ffrs())
+        .current_dir(dir.path())
+        .args([
+            "--dry-run",
+            "--output",
+            "does-not-exist",
+            "convert clip.mp4 to out.avi",
+        ])
+        .output()
+        .expect("failed to run ffrs");
+
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("Output directory does not exist"),
+        "stderr: {stderr}"
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.is_empty(), "stdout: {stdout}");
 }
