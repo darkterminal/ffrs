@@ -1,60 +1,34 @@
-# ffrs - Media Conversion CLI Tool
+# ffrs
 
 [![CI](https://github.com/darkterminal/ffrs/actions/workflows/ci.yml/badge.svg)](https://github.com/darkterminal/ffrs/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/ffrs.svg)](https://crates.io/crates/ffrs)
 [![docs.rs](https://docs.rs/ffrs/badge.svg)](https://docs.rs/ffrs)
 [![license](https://img.shields.io/crates/l/ffrs.svg)](LICENSE)
 
-`ffrs` translates plain English commands into `ffmpeg` commands. It works as both a command-line tool and a Rust library.
+`ffrs` turns plain English media commands into `ffmpeg` commands. Use it as a command-line tool or as a Rust library.
 
-## The Story
+It began as a weekend answer to a comment: rewrite the idea in Rust and ship a single binary. The interface stays plain English, and the generated commands stay deterministic.
 
-I’m a simple guy.
+[Website and user manual](https://darkterminal.github.io/ffrs/) · [API reference](https://docs.rs/ffrs) · [crates.io](https://crates.io/crates/ffrs)
 
-I watch a YouTube livestream about vibe coding.
-That curiosity pulls me into a search. I look up **spec-kit**—and there it is. Found.
+## Highlights
 
-Then I drift.
-I scroll my Facebook timeline.
-Scroll.
-Scroll again.
-Refresh.
-
-Suddenly, nixCraft posts about the **ffrs CLI tool**.
-Yeah, it’s written in JavaScript—and the comment section is exactly what you’d expect.
-
-Then someone drops the line that changes everything:
-
-> “This is my only complaint. It’s a great idea—just rewrite it in Rust or Go and ship it as a single binary.”
-
-Me?
-**Why not.**
-
-No overthinking. No debate.
-Just momentum.
-
-**Vibe it. Build it. Ship it.**
-
-## Features
-
-- Translate plain English commands to ffmpeg commands
-- Convert video, audio, and image formats
-- Extract audio from a video file
-- Interactive and direct command modes
-- Dry-run to inspect the generated command before running it
-- Deterministic, structured command generation
+- Convert, resize, and transcode video, audio, and images without memorizing `ffmpeg` flags.
+- Extract audio from a video with one readable command.
+- Inspect the generated command with `--dry-run` before executing anything.
+- Never overwrite an existing output by default; opt in with `--yes`.
+- Use the same parser and builder from Rust through the library API.
+- Runs on Linux, macOS, and Windows with a Rust 1.85+ toolchain.
 
 ## Installation
 
-Actual conversion requires `ffmpeg` in your `PATH`. `--dry-run` only prints the command and does not need ffmpeg.
-
-### From crates.io
+Actual conversion needs `ffmpeg` on your `PATH`. `--dry-run` only prints the generated command and does not need `ffmpeg`.
 
 ```bash
 cargo install ffrs
 ```
 
-### From source
+From source:
 
 ```bash
 git clone https://github.com/darkterminal/ffrs.git
@@ -62,81 +36,55 @@ cd ffrs
 cargo install --path .
 ```
 
-Verify the installation:
+Verify the install:
 
 ```bash
 ffrs --version
+ffmpeg -version
 ```
 
 Prebuilt release archives are not currently published. Use one of the Cargo methods above.
 
-## Usage
+## Quick start
 
-### Direct mode
+Inspect the command first. This example uses a file that already exists:
 
 ```bash
-# Convert a video file
-ffrs "convert video.mp4 to video.avi"
-
-# Inspect the command without running it
 ffrs --dry-run "convert video.mp4 to video.avi"
+```
 
-# Allow overwriting an existing output file
-ffrs --yes "convert video.mp4 to video.avi"
+```text
+ffmpeg "-n" "-i" "video.mp4" "video.avi"
+```
 
+Remove `--dry-run` to run it. `ffrs` prints the command, then executes `ffmpeg` immediately. The default `-n` preserves an existing output file; pass `--yes` to send `-y` instead.
+
+More examples:
+
+```bash
 # Extract audio
 ffrs "extract audio from video.mp4 to audio.mp3"
 
-# Paths with spaces
+# Resize to an explicit resolution
+ffrs "resize video.mp4 to 1280x720 small.mp4"
+
+# Choose a codec
+ffrs "transcode video.mp4 to h265 out.mp4"
+
+# File names with spaces: single quotes outside, double quotes inside
 ffrs 'convert "my video.mp4" to "my video.avi"'
 
-# Write the output into an existing directory
+# Write into a directory that already exists
 ffrs --output /path/to/output "convert video.mp4 to video.avi"
-
-# Version and help
-ffrs --version
-ffrs --help
 ```
 
-The command is printed before execution. By default `ffrs` passes `-n` to ffmpeg, so an existing output file is never overwritten. Pass `--yes` to send `-y` instead. Use `--dry-run` when you only want to inspect the command.
-
-### Interactive mode
+Interactive mode is useful when you want several commands in one session:
 
 ```bash
 ffrs --interactive
 ```
 
-Type commands at the `>` prompt. Type `quit` or `exit` to leave; end-of-input (for example Ctrl-D) also exits.
-
-### As a library
-
-Add to your `Cargo.toml`:
-
-```toml
-[dependencies]
-ffrs = "0.1.0"
-```
-
-Use in your code:
-
-```rust
-use ffrs::{CommandBuilder, Parser, Tokenizer};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut tokenizer = Tokenizer::new("convert video.mp4 to video.avi");
-    let tokens = tokenizer.tokenize();
-
-    let mut parser = Parser::new(tokens);
-    let intent = parser.parse()?;
-
-    let cmd_builder = CommandBuilder::new();
-    let ffmpeg_cmd = cmd_builder.build_command(&intent)?;
-
-    println!("Generated command: {}", ffmpeg_cmd.to_display_string());
-
-    Ok(())
-}
-```
+Type commands at the `>` prompt. Use `quit`, `exit`, or end-of-input to leave.
 
 ## Command syntax
 
@@ -144,51 +92,75 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 [operation] <input> to [parameter] <output>
 ```
 
-Supported operations:
+| Operation | Example | Notes |
+|---|---|---|
+| `convert` | `convert clip.mp4 to clip.avi` | Change the container or format |
+| `extract audio` | `extract audio from clip.mp4 to song.mp3` | Shorter forms such as `extract clip.mp4 to song.mp3` also work |
+| `resize` | `resize clip.mp4 to 1280x720 small.mp4` | Omit the parameter to use 1920x1080 |
+| `transcode` | `transcode clip.mp4 to opus out.mp4` | Omit the parameter to use libx264 + aac |
 
-- `convert` — convert a file to another supported format
-- `extract audio from <input> to <output>` — extract audio (shorter forms `extract audio <input> ...`, `extract <input> ...`, and `extractaudio <input> ...` also work)
-- `resize <input> to <W>x<H> <output>` — scale to a width and height; omit the parameter to use 1920x1080
-- `transcode <input> to <codec> <output>` — set a video codec (`h264`, `libx264`, `h265`, `libx265`, `vp9`, `av1`, `mpeg4`) or audio codec (`aac`, `mp3`, `flac`, `opus`, `vorbis`); omit the parameter to use libx264 + aac
-
-Malformed dimensions and unknown codecs fail fast before ffmpeg is invoked.
+Video codecs: `h264`, `libx264`, `h265`, `libx265`, `vp9`, `av1`, `mpeg4`. Audio codecs: `aac`, `mp3`, `flac`, `opus`, `vorbis`. A malformed resolution or unknown codec fails before `ffmpeg` runs.
 
 Rules:
 
-- The input file must exist and be a file.
-- The output must have a supported extension and must differ from the input.
-- `--output` must point to a directory that already exists; only the output file name is taken from the command.
-- Existing output files are preserved by default; `--yes` opts in to overwriting them.
+- The input must exist and be a file.
+- The output needs a supported extension and must differ from the input.
+- `--output` must point to an existing directory. Only the file name from the command is used there.
 - Relative, absolute, quoted, and Windows-style paths are recognized.
+- Output directories are not created automatically.
 
-## Supported formats
+Supported formats:
 
 - Video: MP4, AVI, MOV, WMV, MKV, WebM
 - Audio: MP3, WAV, FLAC
 - Images: JPG, PNG, GIF
 
-## Exit codes
+Exit codes: `0` success, `1` input or CLI error, `2` `ffmpeg` failure, `3` internal error.
 
-- `0`: success
-- `1`: user input error (including CLI usage errors)
-- `2`: ffmpeg execution failure
-- `3`: internal error
+## Library usage
 
-## Known limitations
+Add the crate:
 
-- Commands execute immediately after being printed; use `--dry-run` to inspect first, and `--yes` only when overwriting is intended.
-- Output directories are not created automatically.
+```toml
+[dependencies]
+ffrs = "0.1.0"
+```
+
+Build a command without executing it:
+
+```rust
+use ffrs::{CommandBuilder, Parser, Tokenizer};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let tokens = Tokenizer::new("convert video.mp4 to video.avi").tokenize();
+    let intent = Parser::new(tokens).parse()?;
+    let command = CommandBuilder::new().build_command(&intent)?;
+
+    println!("{}", command.to_display_string());
+    Ok(())
+}
+```
+
+## Limitations
+
+- Commands execute as soon as they are printed. Use `--dry-run` to inspect first.
 - Glob patterns and `~` are not expanded by `ffrs`; the shell may expand them first.
-- No release binaries are published at the moment.
+- Release binaries are not published yet.
 
-## Changelog
+## Documentation
 
-See [CHANGELOG.md](CHANGELOG.md) for notable changes.
+- [Website and user manual](https://darkterminal.github.io/ffrs/)
+- [API reference](https://docs.rs/ffrs)
+- [Changelog](CHANGELOG.md)
+- [Contributing guide](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and contribution guidelines.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, verification commands, and the pull-request workflow. Run `cargo fmt`, `cargo clippy`, and `cargo test` before opening a PR.
+
+This project follows the [Rust Code of Conduct](https://www.rust-lang.org/policies/code-of-conduct). Please report unacceptable behavior as described in the security policy.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT. See [LICENSE](LICENSE).

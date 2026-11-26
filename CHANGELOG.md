@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI now audits dependencies for advisories on pull requests and pushes to `main`.
 - Documented the protected `main` policy: six required checks, no force pushes or deletion, and an explicit admin bypass.
 - Repository metadata now describes `ffrs` as a Rust CLI, points to crates.io, and uses corrected `ffmpeg`/`rust` topics.
+- Rewrote the README as a conventional open-source README with a verified quickstart and documentation links.
 - Recorded `ffrs` as the single CLI identity; no `ff` alias is added.
 - Recorded deferred version synchronization; maintenance PRs do not bump versions or publish.
 - Documented the fail-fast `--output` policy and why additional formats are deferred.
