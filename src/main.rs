@@ -194,13 +194,9 @@ fn process_command(
             )));
         }
 
-        cmd_builder
-            .build_command_with_output_path(&intent, output_path)
-            .map_err(|e| FfError::UserInput(e.to_string()))?
+        cmd_builder.build_command_with_output_path(&intent, output_path)?
     } else {
-        cmd_builder
-            .build_command(&intent)
-            .map_err(|e| FfError::UserInput(e.to_string()))?
+        cmd_builder.build_command(&intent)?
     };
 
     // Overwrite policy belongs to the CLI, not the library builder. Keep it

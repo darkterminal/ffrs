@@ -6,6 +6,8 @@
 //! - 2: ffmpeg execution failure
 //! - >2: internal error
 
+use crate::command_builder::BuildError;
+
 /// Application-level error with explicit exit code mapping.
 #[derive(Debug)]
 pub enum FfError {
@@ -27,6 +29,12 @@ impl std::fmt::Display for FfError {
 }
 
 impl std::error::Error for FfError {}
+
+impl From<BuildError> for FfError {
+    fn from(error: BuildError) -> Self {
+        FfError::UserInput(error.to_string())
+    }
+}
 
 impl FfError {
     /// Maps this error to its designated exit code.
@@ -51,6 +59,14 @@ mod tests {
             2
         );
         assert_eq!(FfError::Internal("unexpected bug".into()).exit_code(), 3);
+    }
+
+    #[test]
+    fn test_build_error_maps_to_user_input() {
+        let error = FfError::from(BuildError::InvalidIntent("bad intent".to_string()));
+
+        assert!(matches!(error, FfError::UserInput(_)));
+        assert_eq!(error.exit_code(), 1);
     }
 
     #[test]
