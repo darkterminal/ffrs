@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tokenizer recognizes relative, quoted, and Windows paths instead of rejecting them.
 - Tokenizer always advances past unexpected characters instead of looping forever.
 - Integration tests nested under `tests/` are now discovered and compiled by Cargo.
+- CI audit checks no longer fail on pushes to `main` when the action publishes a report.
 
 ### Removed
 
