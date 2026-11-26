@@ -25,7 +25,7 @@ fn accepts_relative_path_with_directory() {
     );
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
-        stdout.contains("ffmpeg \"-i\" \"sub/clip.mp4\" \"out.avi\""),
+        stdout.contains("ffmpeg \"-n\" \"-i\" \"sub/clip.mp4\" \"out.avi\""),
         "stdout: {stdout}"
     );
 }

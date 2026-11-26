@@ -81,6 +81,9 @@ ffrs "convert video.mp4 to video.avi"
 # Inspect the command without running it
 ffrs --dry-run "convert video.mp4 to video.avi"
 
+# Allow overwriting an existing output file
+ffrs --yes "convert video.mp4 to video.avi"
+
 # Extract audio
 ffrs "extract audio from video.mp4 to audio.mp3"
 
@@ -95,7 +98,7 @@ ffrs --version
 ffrs --help
 ```
 
-The command is printed before execution. Use `--dry-run` when you only want to inspect it.
+The command is printed before execution. By default `ffrs` passes `-n` to ffmpeg, so an existing output file is never overwritten. Pass `--yes` to send `-y` instead. Use `--dry-run` when you only want to inspect the command.
 
 ### Interactive mode
 
@@ -151,6 +154,7 @@ Rules:
 - The input file must exist and be a file.
 - The output must have a supported extension and must differ from the input.
 - `--output` must point to a directory that already exists; only the output file name is taken from the command.
+- Existing output files are preserved by default; `--yes` opts in to overwriting them.
 - Relative, absolute, quoted, and Windows-style paths are recognized.
 
 ## Supported formats
@@ -168,7 +172,7 @@ Rules:
 
 ## Known limitations
 
-- Commands execute immediately after being printed; use `--dry-run` to inspect first.
+- Commands execute immediately after being printed; use `--dry-run` to inspect first, and `--yes` only when overwriting is intended.
 - Output directories are not created automatically.
 - Glob patterns and `~` are not expanded by `ffrs`; the shell may expand them first.
 - No release binaries are published at the moment.

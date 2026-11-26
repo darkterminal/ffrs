@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--version` flag, which reports the `ffrs` crate version.
 - `ffrs` identity for clap so `--help` and usage output match the binary name.
 - Documented `extract audio from <input> to <output>` syntax, plus shorter `extract audio <input> ...` and `extract <input> ...` forms.
+- `--yes` flag to overwrite an existing output file; the default never overwrites.
 
 ### Changed
 
@@ -22,7 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI now enforces formatting, clippy, and rustdoc, with locked builds and current action versions.
 - `Cargo.lock` is now tracked, and non-crate files are excluded from package archives.
 - Rustfmt configuration now matches the crate's 2021 edition, and all sources are formatted.
-- README, user manual, and Qwen context now describe the implemented CLI; removed `--yes` and release-asset instructions.
+- Generated ffmpeg commands now include an explicit overwrite flag (`-n` by default, `-y` with `--yes`).
+- README, user manual, and Qwen context now describe the implemented CLI; stale release-asset instructions were removed.
 - Contributor guide, issue/PR templates, security policy, and Dependabot configuration are now included.
 
 ### Fixed
