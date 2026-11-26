@@ -86,6 +86,12 @@ The crate and binary are both named `ffrs`. There is no `ff` alias and no second
 
 At release time, align the manifest version, the `v*` tag, the GitHub release, crates.io, and docs.rs. Decide whether accumulated grammar changes are minor or patch before tagging; additive grammar changes are treated as minor.
 
+## Output directory and formats
+
+`--output` must point to an existing directory. `ffrs` fails fast instead of creating it; callers create the directory themselves.
+
+Supported formats are intentionally limited. `is_supported_format` is public API and feeds grammar validation, so adding formats is evaluated as a separate change rather than bundled into maintenance work.
+
 ## Grammar changes
 
 The plain-English grammar is implemented in `src/grammar/tokenizer.rs` and `src/grammar/parser.rs`. When changing it:
