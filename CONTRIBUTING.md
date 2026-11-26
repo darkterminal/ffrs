@@ -61,6 +61,19 @@ Keep the summary imperative and lower-case, and put the rationale in the commit 
 
 Do not bump the version, create tags, or publish releases as part of a normal maintenance pull request. Release decisions are separate from code changes.
 
+## Protected `main`
+
+`main` is protected: changes land through a pull request only. These checks must pass before merge:
+
+- `Lint`
+- `Test (ubuntu-latest)`
+- `Test (macos-latest)`
+- `Test (windows-latest)`
+- `MSRV (1.85.0)`
+- `Audit`
+
+Force pushes and deletion of `main` are blocked. Branch protection does not enforce these checks on administrators (`enforce_admins: false`), so an administrator can bypass them in an emergency. Treat that as an exception, not the normal path.
+
 ## Grammar changes
 
 The plain-English grammar is implemented in `src/grammar/tokenizer.rs` and `src/grammar/parser.rs`. When changing it:
