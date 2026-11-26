@@ -18,6 +18,9 @@ struct Cli {
 
     #[arg(long)]
     output: Option<String>,
+
+    #[arg(long, default_value_t = false)]
+    yes: bool,
 }
 
 fn main() {
@@ -36,14 +39,18 @@ fn main() {
     if args.interactive {
         let stdin = io::stdin();
         let mut stdout = io::stdout();
-        if let Err(error) =
-            run_interactive_mode(stdin.lock(), &mut stdout, args.dry_run, args.output)
-        {
+        if let Err(error) = run_interactive_mode(
+            stdin.lock(),
+            &mut stdout,
+            args.dry_run,
+            args.output,
+            args.yes,
+        ) {
             eprintln!("Error reading input: {}", error);
             std::process::exit(1);
         }
     } else if let Some(command) = args.command {
-        run_direct_mode(&command, args.dry_run, args.output);
+        run_direct_mode(&command, args.dry_run, args.output, args.yes);
     } else {
         eprintln!("Error: No command provided. Use --help for usage information.");
         std::process::exit(1);
@@ -55,6 +62,7 @@ fn run_interactive_mode<R: io::BufRead, W: io::Write>(
     writer: &mut W,
     dry_run: bool,
     output: Option<String>,
+    overwrite: bool,
 ) -> io::Result<()> {
     writeln!(writer, "FF - Media Conversion Tool (Interactive Mode)")?;
     writeln!(writer, "Enter 'quit' or 'exit' to exit the program")?;
@@ -75,7 +83,7 @@ fn run_interactive_mode<R: io::BufRead, W: io::Write>(
         }
         if !input.is_empty() {
             // clone() karena process_command consume Option<String>
-            if let Err(error) = process_command(input, dry_run, output.clone()) {
+            if let Err(error) = process_command(input, dry_run, output.clone(), overwrite) {
                 eprintln!("{}", error);
                 print_guidance(&error);
             }
@@ -85,8 +93,8 @@ fn run_interactive_mode<R: io::BufRead, W: io::Write>(
     Ok(())
 }
 
-fn run_direct_mode(command: &str, dry_run: bool, output: Option<String>) {
-    match process_command(command, dry_run, output) {
+fn run_direct_mode(command: &str, dry_run: bool, output: Option<String>, overwrite: bool) {
+    match process_command(command, dry_run, output, overwrite) {
         Ok(_) => std::process::exit(0),
         Err(e) => {
             eprintln!("{}", e);
@@ -131,7 +139,12 @@ fn print_guidance(err: &FfError) {
     }
 }
 
-fn process_command(command: &str, dry_run: bool, output: Option<String>) -> Result<(), FfError> {
+fn process_command(
+    command: &str,
+    dry_run: bool,
+    output: Option<String>,
+    overwrite: bool,
+) -> Result<(), FfError> {
     // Step 1: Tokenize & Parse
     let mut tokenizer = Tokenizer::new(command);
     let tokens = tokenizer.tokenize();
@@ -158,7 +171,7 @@ fn process_command(command: &str, dry_run: bool, output: Option<String>) -> Resu
     // Step 3: Build ffmpeg command
     let cmd_builder = CommandBuilder::new();
 
-    let ffmpeg_cmd = if let Some(output_dir) = output {
+    let mut ffmpeg_cmd = if let Some(output_dir) = output {
         let output_dir = std::path::PathBuf::from(&output_dir);
         if !output_dir.is_dir() {
             return Err(FfError::UserInput(format!(
@@ -190,6 +203,11 @@ fn process_command(command: &str, dry_run: bool, output: Option<String>) -> Resu
             .map_err(|e| FfError::UserInput(e.to_string()))?
     };
 
+    // Overwrite policy belongs to the CLI, not the library builder. Keep it
+    // in the printed command so --dry-run is an honest preview.
+    let overwrite_flag = if overwrite { "-y" } else { "-n" };
+    ffmpeg_cmd.args.insert(0, overwrite_flag.to_string());
+
     // Step 4: Print the command (constitution requirement)
     println!("{}", ffmpeg_cmd.to_display_string());
 
@@ -211,7 +229,7 @@ mod tests {
 
     fn run_interactive(input: &str) -> (io::Result<()>, String) {
         let mut output = Vec::new();
-        let result = run_interactive_mode(Cursor::new(input), &mut output, true, None);
+        let result = run_interactive_mode(Cursor::new(input), &mut output, true, None, false);
         let output = String::from_utf8(output).expect("interactive output should be UTF-8");
         (result, output)
     }
@@ -259,7 +277,7 @@ mod tests {
         }
 
         let mut output = Vec::new();
-        let result = run_interactive_mode(FailingReader, &mut output, true, None);
+        let result = run_interactive_mode(FailingReader, &mut output, true, None, false);
 
         assert!(result.is_err());
     }

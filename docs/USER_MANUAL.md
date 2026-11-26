@@ -101,7 +101,7 @@ When you run a command, `ffrs`:
 2. Prints the ffmpeg command it will run.
 3. Runs ffmpeg immediately.
 
-Commands run immediately after being printed. If you only want to see the command, use `--dry-run`.
+Commands run immediately after being printed. By default `ffrs` adds `-n`, so ffmpeg will not overwrite an existing output file. If you want to allow overwriting, pass `--yes`, which adds `-y`. There is no interactive confirmation prompt. If you only want to see the command, use `--dry-run`.
 
 For example:
 
@@ -112,8 +112,10 @@ ffrs --dry-run "convert video.mp4 to video.avi"
 prints:
 
 ```text
-ffmpeg "-i" "video.mp4" "video.avi"
+ffmpeg "-n" "-i" "video.mp4" "video.avi"
 ```
+
+With `--yes`, the same command prints `ffmpeg "-y" "-i" "video.mp4" "video.avi"`.
 
 ### Paths with spaces
 
@@ -198,6 +200,10 @@ Choose a different output name or format; `ffrs` will not overwrite the input fi
 
 Create the directory first, or pass a different existing directory to `--output`.
 
+### "Output file already exists"
+
+By default `ffrs` passes `-n` to ffmpeg, so an existing output is preserved and ffmpeg exits with an error. Rerun with `--yes` if overwriting is intended.
+
 ### "Unsupported format"
 
 The input extension is not supported. See the supported formats list below.
@@ -229,6 +235,7 @@ Make sure `cargo install ffrs` completed and the Cargo bin directory is in your 
 
 - `--interactive`: start interactive mode
 - `--dry-run`: print the command without executing it
+- `--yes`: overwrite an existing output file (`-y`); the default is no overwrite (`-n`)
 - `--output <dir>`: write the output file into an existing directory
 - `--help`: show help
 - `--version`: show version
