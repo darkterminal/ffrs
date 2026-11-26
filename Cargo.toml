@@ -2,6 +2,7 @@
 name = "ffrs"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.85"
 authors = ["Imam Ali Mustofa <darkterminal@duck.com>"]
 description = "A CLI tool that translates plain English commands into ffmpeg commands"
 license = "MIT"
