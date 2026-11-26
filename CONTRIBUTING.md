@@ -80,6 +80,12 @@ Force pushes and deletion of `main` are blocked. Branch protection does not enfo
 
 The crate and binary are both named `ffrs`. There is no `ff` alias and no second binary target. Adding an alias requires a separate decision because it changes the installed command name and help output.
 
+## Release and version policy
+
+`Cargo.toml` stays at 0.1.0 until a deliberate release. Maintenance pull requests do not bump the version, create tags, publish GitHub releases, or run `cargo publish`.
+
+At release time, align the manifest version, the `v*` tag, the GitHub release, crates.io, and docs.rs. Decide whether accumulated grammar changes are minor or patch before tagging; additive grammar changes are treated as minor.
+
 ## Grammar changes
 
 The plain-English grammar is implemented in `src/grammar/tokenizer.rs` and `src/grammar/parser.rs`. When changing it:
