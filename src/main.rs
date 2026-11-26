@@ -85,7 +85,7 @@ fn run_interactive_mode<R: io::BufRead, W: io::Write>(
             // clone() karena process_command consume Option<String>
             if let Err(error) = process_command(input, dry_run, output.clone(), overwrite) {
                 eprintln!("{}", error);
-                print_guidance(&error);
+                eprintln!("Guidance: {}", error.guidance());
             }
         }
     }
@@ -98,43 +98,8 @@ fn run_direct_mode(command: &str, dry_run: bool, output: Option<String>, overwri
         Ok(_) => std::process::exit(0),
         Err(e) => {
             eprintln!("{}", e);
-            print_guidance(&e);
+            eprintln!("Guidance: {}", e.guidance());
             std::process::exit(e.exit_code());
-        }
-    }
-}
-
-fn print_guidance(err: &FfError) {
-    match err {
-        FfError::UserInput(msg) => {
-            if msg.contains("Output directory") {
-                eprintln!("Guidance: Create the output directory first or choose an existing one.");
-            } else if msg.contains("must differ from input") {
-                eprintln!("Guidance: Choose a different output file name or format.");
-            } else if msg.contains("must use a supported format") {
-                eprintln!(
-                    "Guidance: Use a supported output extension: MP4, AVI, MOV, WMV, MKV, WebM, MP3, WAV, FLAC, JPG, PNG, GIF"
-                );
-            } else if msg.contains("not exist") || msg.contains("not found") {
-                eprintln!(
-                    "Guidance: Make sure the input file path is correct and the file exists."
-                );
-            } else if msg.contains("Unsupported format") {
-                eprintln!("Guidance: Check supported formats: MP4, AVI, MOV, WMV, MKV, WebM, MP3, WAV, FLAC, JPG, PNG, GIF");
-            } else {
-                eprintln!("Guidance: Make sure your command follows the format 'convert <input> to <output>' or similar.");
-                eprintln!("Example: 'convert video.mp4 to video.avi'");
-            }
-        }
-        FfError::ExecutionFailure(msg) => {
-            if msg.contains("not available") {
-                eprintln!("Guidance: Install ffmpeg and ensure it is accessible in your PATH.");
-            } else {
-                eprintln!("Guidance: Check ffmpeg output above for details. Input file may be corrupted or format may be invalid.");
-            }
-        }
-        FfError::Internal(_) => {
-            eprintln!("Guidance: This is an unexpected bug. Please report it at https://github.com/darkterminal/ffrs/issues");
         }
     }
 }

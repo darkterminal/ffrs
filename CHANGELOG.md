@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `CommandBuilder` now returns a concrete `BuildError` instead of `Box<dyn Error>`; the error is exported and converts into `FfError`.
+- User-facing guidance now lives on `FfError` instead of being derived from message text in the CLI.
 - Output paths without a supported media extension now fail fast instead of reaching ffmpeg.
 - CLI usage errors now exit with code `1`; `--help` and `--version` still exit with `0`.
 - The binary now consumes the library crate instead of compiling a second copy of its modules.
