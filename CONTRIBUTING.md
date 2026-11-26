@@ -10,7 +10,7 @@ cd ffrs
 cargo build --locked
 ```
 
-Install a stable Rust toolchain. Actual conversion needs `ffmpeg` in `PATH`, but the test suite does not execute ffmpeg and does not need it installed.
+Install Rust 1.85 or newer. That is the declared minimum supported version (MSRV) in `Cargo.toml`, and CI verifies it with a 1.85.0 job. Actual conversion needs `ffmpeg` in `PATH`, but the test suite does not execute ffmpeg and does not need it installed.
 
 To run the CLI locally:
 
@@ -32,6 +32,8 @@ cargo test --locked --doc
 ```
 
 Tests must not depend on a real ffmpeg installation or on release assets. Use `--dry-run`, tokenizer/parser tests, and temporary files.
+
+If the 1.85.0 toolchain is installed locally, also run `cargo +1.85.0 check --locked --all-targets` to reproduce the MSRV job.
 
 ## Commit messages
 
