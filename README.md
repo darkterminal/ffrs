@@ -123,7 +123,7 @@ Add the crate:
 
 ```toml
 [dependencies]
-ffrs = "0.1.0"
+ffrs = "0.2.0"
 ```
 
 Build a command without executing it:
